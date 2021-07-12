@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xdcplus.interaction.mapper.ProcessConfigMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.xdcplus.interaction.common.pojo.entity.ProcessConfig">
+        <id column="id" property="id" />
+        <result column="process_id" property="processId" />
+        <result column="from_status_id" property="fromStatusId" />
+        <result column="to_status_id" property="toStatusId" />
+         <result column="to_role_id" property="toRoleId" />
+        <result column="to_user_id" property="toUserId" />
+        <result column="qualifier_id" property="qualifierId" />
+        <result column="version" property="version"/>
+        <result column="created_user" property="createdUser" />
+        <result column="updated_user" property="updatedUser" />
+        <result column="created_time" property="createdTime" />
+        <result column="updated_time" property="updatedTime" />
+        <result column="description" property="description" />
+        <result column="timeout_action" property="timeoutAction"/>
+
+    </resultMap>
+
+    <resultMap id="ProcessConfigResultMap" type="com.xdcplus.interaction.common.pojo.bo.ProcessConfigBO">
+        <id column="id" property="id" />
+        <result column="process_id" property="processId" />
+        <result column="from_status_id" property="fromStatusId" />
+        <result column="to_status_id" property="toStatusId" />
+         <result column="to_role_id" property="toRoleId" />
+        <result column="to_user_id" property="toUserId" />
+        <result column="qualifier_id" property="qualifierId" />
+        <result column="version" property="version"/>
+        <result column="created_user" property="createdUser" />
+        <result column="updated_user" property="updatedUser" />
+        <result column="created_time" property="createdTime" />
+        <result column="updated_time" property="updatedTime" />
+        <result column="description" property="description" />
+        <association property="process" javaType="com.xdcplus.interaction.common.pojo.entity.Process" columnPrefix="process_">
+            <id column="id" property="id" />
+            <result column="name" property="name" />
+            <result column="created_user" property="createdUser" />
+            <result column="updated_user" property="updatedUser" />
+            <result column="created_time" property="createdTime" />
+            <result column="updated_time" property="updatedTime" />
+            <result column="description" property="description" />
+        </association>
+        <association property="fromStatus" javaType="com.xdcplus.interaction.common.pojo.entity.ProcessStatus" columnPrefix="ps1_">
+            <id column="id" property="id" />
+            <result column="name" property="name" />
+            <result column="mark" property="mark"/>
+            <result column="created_user" property="createdUser" />
+            <result column="updated_user" property="updatedUser" />
+            <result column="created_time" property="createdTime" />
+            <result column="updated_time" property="updatedTime" />
+            <result column="description" property="description" />
+        </association>
+        <association property="toStatus" javaType="com.xdcplus.interaction.common.pojo.entity.ProcessStatus" columnPrefix="ps2_">
+            <id column="id" property="id" />
+            <result column="name" property="name" />
+            <result column="mark" property="mark"/>
+            <result column="created_user" property="createdUser" />
+            <result column="updated_user" property="updatedUser" />
+            <result column="created_time" property="createdTime" />
+            <result column="updated_time" property="updatedTime" />
+            <result column="description" property="description" />
+        </association>
+         <association property="qualifier" javaType="com.xdcplus.interaction.common.pojo.entity.Qualifier" columnPrefix="qualifier_">
+            <id column="id" property="id" />
+            <result column="name" property="name" />
+            <result column="script" property="script" />
+            <result column="created_user" property="createdUser" />
+            <result column="updated_user" property="updatedUser" />
+            <result column="created_time" property="createdTime" />
+            <result column="updated_time" property="updatedTime" />
+            <result column="description" property="description" />
+        </association>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, process_id, from_status_id, to_status_id, to_role_id, to_user_id, qualifier_id,
+        timeout_action, version, created_user, updated_user, created_time, updated_time, description
+    </sql>
+
+    <sql id="Process_Config_Column_List">
+        ${alias}.id as id, ${alias}.process_id as process_id, ${alias}.from_status_id as from_status_id,
+        ${alias}.to_status_id as to_status_id, ${alias}.to_role_id as to_role_id,
+        ${alias}.to_user_id as to_user_id, ${alias}.qualifier_id as qualifier_id, ${alias}.timeout_action as timeout_action,
+        ${alias}.version as version,${alias}.created_user as created_user, ${alias}.updated_user as updated_user,
+        ${alias}.created_time as created_time, ${alias}.updated_time as updated_time,
+        ${alias}.description as description
+    </sql>
+
+    <sql id="Process_Column_List">
+        ${alias}.id as ${alias}_id,${alias}.name as ${alias}_name,${alias}.created_user as ${alias}_created_user,
+        ${alias}.updated_user as ${alias}_updated_user,${alias}.created_time as ${alias}_created_time,
+        ${alias}.updated_time as ${alias}_updated_time,${alias}.description as ${alias}_description
+    </sql>
+
+    <sql id="Process_Status_Column_List">
+        ${alias}.id as ${alias}_id, ${alias}.name as ${alias}_name, ${alias}.mark as ${alias}_mark,
+        ${alias}.created_user as ${alias}_created_user, ${alias}.updated_user as ${alias}_updated_user,
+        ${alias}.created_time as ${alias}_created_time, ${alias}.updated_time as ${alias}_updated_time,
+        ${alias}.description as ${alias}_description
+    </sql>
+
+    <sql id="Qualifier_Column_List">
+        ${alias}.id as ${alias}_id, ${alias}.name as ${alias}_name, ${alias}.script as ${alias}_script,
+        ${alias}.created_user as ${alias}_created_user, ${alias}.updated_user as ${alias}_updated_user,
+        ${alias}.created_time as ${alias}_created_time, ${alias}.updated_time as ${alias}_updated_time,
+        ${alias}.description as ${alias}_description
+    </sql>
+
+    <select id="findProcessConfig" resultMap="ProcessConfigResultMap">
+        SELECT
+            <include refid="Process_Config_Column_List"><property name="alias" value="config"/></include>,
+            <include refid="Process_Column_List"><property name="alias" value="process"/></include>,
+           <include refid="Process_Status_Column_List"><property name="alias" value="ps1"/></include>,
+           <include refid="Process_Status_Column_List"><property name="alias" value="ps2"/></include>,
+           <include refid="Qualifier_Column_List"><property name="alias" value="qualifier"/></include>
+        FROM
+            xdc_t_process_config AS config
+            LEFT JOIN xdc_t_process AS process ON config.process_id = process.id
+            LEFT JOIN xdc_t_process_status AS ps1 ON config.from_status_id = ps1.id
+            LEFT JOIN xdc_t_process_status AS ps2 ON config.to_status_id = ps2.id
+            LEFT JOIN xdc_t_qualifier AS qualifier ON config.qualifier_id = qualifier.id
+        <where>
+            <if test="processId != null">
+                and config.process_id = #{processId,jdbcType=BIGINT}
+            </if>
+             <if test="toUserId != null">
+                and config.to_user_id = #{toUserId,jdbcType=BIGINT}
+            </if>
+            <if test="fromStatusId != null">
+                and config.from_status_id = #{fromStatusId,jdbcType=BIGINT}
+            </if>
+            <if test="toStatusId != null">
+                and config.to_status_id = #{toStatusId,jdbcType=BIGINT}
+            </if>
+            <if test="toRoleId != null">
+                and config.to_role_id = #{toRoleId,jdbcType=BIGINT}
+            </if>
+            <if test="qualifierId != null">
+                and config.qualifier_id = #{qualifierId,jdbcType=BIGINT}
+            </if>
+            <if test="ids != null and ids.size() != 0">
+                and config.id in
+                <foreach collection="ids" index="index" close=")" item="item" open="(" separator=",">
+                      #{item,jdbcType=BIGINT}
+                </foreach>
+            </if>
+        </where>
+    </select>
+    <select id="findConfigByProcessId" resultMap="BaseResultMap">
+        select
+            <include refid="Base_Column_List"/>
+        from xdc_t_process_config
+        where process_id = #{processId,jdbcType=BIGINT}
+    </select><select id="findConfigByRequestId" resultMap="ProcessConfigResultMap">
+        SELECT
+            <include refid="Process_Config_Column_List"><property name="alias" value="config"/></include>,
+            <include refid="Process_Column_List"><property name="alias" value="process"/></include>,
+           <include refid="Process_Status_Column_List"><property name="alias" value="ps1"/></include>,
+           <include refid="Process_Status_Column_List"><property name="alias" value="ps2"/></include>,
+           <include refid="Qualifier_Column_List"><property name="alias" value="qualifier"/></include>
+        FROM
+            xdc_t_process_config AS config
+            LEFT JOIN xdc_t_request AS req ON config.process_id = req.process_id
+            LEFT JOIN xdc_t_process AS process ON config.process_id = process.id
+            LEFT JOIN xdc_t_process_status AS ps1 ON config.from_status_id = ps1.id
+            LEFT JOIN xdc_t_process_status AS ps2 ON config.to_status_id = ps2.id
+            LEFT JOIN xdc_t_qualifier AS qualifier ON config.qualifier_id = qualifier.id
+        WHERE
+            req.id = #{requestId,jdbcType=BIGINT}
+    </select>
+    <select id="findConfigByProcessIdAndFromStatusId" resultMap="ProcessConfigResultMap">
+         SELECT
+            <include refid="Process_Config_Column_List"><property name="alias" value="config"/></include>,
+           <include refid="Process_Status_Column_List"><property name="alias" value="ps1"/></include>,
+            <include refid="Process_Column_List"><property name="alias" value="process"/></include>,
+           <include refid="Process_Status_Column_List"><property name="alias" value="ps2"/></include>,
+           <include refid="Qualifier_Column_List"><property name="alias" value="qualifier"/></include>
+        FROM
+            xdc_t_process_config AS config
+            LEFT JOIN xdc_t_request AS req ON config.process_id = req.process_id
+            LEFT JOIN xdc_t_process AS process ON config.process_id = process.id
+            LEFT JOIN xdc_t_process_status AS ps1 ON config.from_status_id = ps1.id
+            LEFT JOIN xdc_t_process_status AS ps2 ON config.to_status_id = ps2.id
+            LEFT JOIN xdc_t_qualifier AS qualifier ON config.qualifier_id = qualifier.id
+        WHERE
+            config.process_id = #{processId,jdbcType=BIGINT}
+            and config.from_status_id = #{fromStatusId,jdbcType=BIGINT}
+            and config.version = #{version,jdbcType=VARCHAR}
+    </select>
+    <select id="findConfigByProcessIdAndVersion" resultMap="BaseResultMap">
+        select
+            <include refid="Base_Column_List"/>
+        from xdc_t_process_config
+        where version = #{version,jdbcType=VARCHAR}
+        and process_id = #{processId,jdbcType=BIGINT}
+    </select>
+    <select id="findConfigAssociatedByProcessId" resultMap="ProcessConfigResultMap">
+        SELECT
+            <include refid="Process_Config_Column_List"><property name="alias" value="config"/></include>,
+           <include refid="Process_Status_Column_List"><property name="alias" value="ps1"/></include>,
+            <include refid="Process_Column_List"><property name="alias" value="process"/></include>,
+           <include refid="Process_Status_Column_List"><property name="alias" value="ps2"/></include>,
+           <include refid="Qualifier_Column_List"><property name="alias" value="qualifier"/></include>
+        FROM
+            xdc_t_process_config AS config
+            LEFT JOIN xdc_t_request AS req ON config.process_id = req.process_id
+            LEFT JOIN xdc_t_process AS process ON config.process_id = process.id
+            LEFT JOIN xdc_t_process_status AS ps1 ON config.from_status_id = ps1.id
+            LEFT JOIN xdc_t_process_status AS ps2 ON config.to_status_id = ps2.id
+            LEFT JOIN xdc_t_qualifier AS qualifier ON config.qualifier_id = qualifier.id
+        <where>
+            config.process_id = #{processId,jdbcType=BIGINT}
+            <if test="version != null and version != ''">
+                and config.version = #{version,jdbcType=VARCHAR}
+            </if>
+        </where>
+    </select>
+
+</mapper>

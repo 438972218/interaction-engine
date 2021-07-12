@@ -1,0 +1,56 @@
+server:
+  port: 9094
+
+#knife4j配置
+knife4j:
+  # 是否是生产环境
+  production: false
+
+spring:
+
+  # mysql 配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/interaction_engine?useUnicode=true&characterEncoding=UTF-8&useSSL=false
+    username: root
+    password: root
+
+  # redis 缓存配置
+  redis:
+    host: localhost
+    port: 6379
+    database: 10
+
+# 工作流配置类
+flowable:
+  # 设置是否等待前加签同意 , false: 不用，true: 需要
+  signatureWait: false
+
+url:
+  ip:
+    # 权限收放引擎IP
+    permControlEngineIp: 10.20.54.133
+  port:
+    # 权限收放引擎端口
+    permControlEnginePort: 9004
+  path:
+    getSysUserByUserIdOrUserName: /sysUser/getSysUserByUserIdOrUserName
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

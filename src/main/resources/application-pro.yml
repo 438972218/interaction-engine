@@ -1,0 +1,57 @@
+server:
+  port: 8080
+
+#knife4j配置
+knife4j:
+  # 是否是生产环境
+  production: ${SWAGGER_DISABLE}
+
+spring:
+
+  # mysql 配置
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}?useUnicode=true&characterEncoding=UTF-8&useSSL=false
+    username: ${MYSQL_USERNAME}
+    password: ${MYSQL_PASSWORD}
+
+  # redis 缓存配置
+  redis:
+    host: ${REDIS_HOST}
+    port:  ${REDIS_PORT}
+    database: ${REDIS_DATABASE}
+
+# 工作流配置类
+flowable:
+  # 设置是否等待前加签同意 , false: 不用，true: 需要
+  signatureWait: ${FLOWABLE_SIGNATURE_WAIT:false}
+
+url:
+  ip:
+    # 权限收放引擎IP
+    permControlEngineIp: ${PERMISSION_CONTROL_ENGINE_IP}
+  port:
+    # 权限收放引擎端口
+    permControlEnginePort: ${PERMISSION_CONTROL_ENGINE_PORT}
+  path:
+    getSysUserByUserIdOrUserName: ${GET_USER_BY_ID_OR_NAME:/sysUser/getSysUserByUserIdOrUserName}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

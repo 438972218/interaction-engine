@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xdcplus.interaction.mapper.RequestRelationMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.xdcplus.interaction.common.pojo.entity.RequestRelation">
+        <id column="id" property="id" />
+        <result column="request_id" property="requestId" />
+        <result column="parent_id" property="parentId" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, request_id, parent_id
+    </sql>
+    <select id="findRequestRelation" resultMap="BaseResultMap">
+        select
+            rr.*
+        from xdc_t_request_relation as rr
+        where rr.request_id = #{requestId,jdbcType=BIGINT}
+        and rr.parent_id = #{parentId,jdbcType=BIGINT}
+    </select>
+    <select id="findRequestRelationByRequestId" resultMap="BaseResultMap">
+         select
+            rr.*
+        from xdc_t_request_relation as rr
+        where rr.request_id = #{requestId,jdbcType=BIGINT}
+    </select>
+    <select id="findRequestRelationByParentId" resultMap="BaseResultMap">
+        select
+            rr.*
+        from xdc_t_request_relation as rr
+        where rr.parent_id = #{parentId,jdbcType=BIGINT}
+    </select>
+
+</mapper>

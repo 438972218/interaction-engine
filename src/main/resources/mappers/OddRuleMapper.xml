@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xdcplus.interaction.mapper.OddRuleMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.xdcplus.interaction.common.pojo.entity.OddRule">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="prefix" property="prefix" />
+        <result column="algorithm" property="algorithm" />
+        <result column="auto_number" property="autoNumber" />
+        <result column="created_user" property="createdUser" />
+        <result column="updated_user" property="updatedUser" />
+        <result column="created_time" property="createdTime" />
+        <result column="updated_time" property="updatedTime" />
+        <result column="description" property="description" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, name, prefix, algorithm, auto_number, created_user, updated_user, created_time, updated_time, description
+    </sql>
+    <update id="updateAutoNumber">
+        update xdc_t_odd_rule set auto_number = #{autoNumber,jdbcType=BIGINT}
+        where id = #{id,jdbcType=BIGINT}
+    </update><select id="findOddRuleByPrefix" resultMap="BaseResultMap">
+        SELECT
+            rule.*
+        FROM
+            xdc_t_odd_rule AS rule
+        WHERE
+            rule.prefix = #{prefix,jdbcType=VARCHAR}
+    </select>
+    <select id="findOddRule" resultMap="BaseResultMap">
+        select
+            rule.*
+        FROM
+            xdc_t_odd_rule AS rule
+        <where>
+            <if test="name != null and name != ''">
+                rule.name = #{name,jdbcType=VARCHAR}
+            </if>
+            <if test="prefix != null and prefix != ''">
+                rule.prefix = #{prefix,jdbcType=VARCHAR}
+            </if>
+        </where>
+
+    </select>
+
+</mapper>

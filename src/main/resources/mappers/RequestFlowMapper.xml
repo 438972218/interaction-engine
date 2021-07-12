@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xdcplus.interaction.mapper.RequestFlowMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.xdcplus.interaction.common.pojo.entity.RequestFlow">
+        <id column="id" property="id" />
+        <result column="request_id" property="requestId" />
+        <result column="from_status_id" property="fromStatusId" />
+        <result column="to_status_id" property="toStatusId" />
+        <result column="from_user_id" property="fromUserId" />
+         <result column="to_role_id" property="toRoleId" />
+        <result column="to_user_id" property="toUserId" />
+        <result column="config_version" property="configVersion"/>
+        <result column="flow_option_value" property="flowOptionValue" />
+        <result column="begin_time" property="beginTime" />
+        <result column="end_time" property="endTime" />
+        <result column="created_user" property="createdUser" />
+        <result column="updated_user" property="updatedUser" />
+        <result column="created_time" property="createdTime" />
+        <result column="updated_time" property="updatedTime" />
+        <result column="description" property="description" />
+    </resultMap>
+
+    <resultMap id="RequestFlowResultMap" type="com.xdcplus.interaction.common.pojo.bo.RequestFlowBO">
+        <id column="id" property="id" />
+        <result column="to_user_id" property="toUserId" />
+        <result column="to_role_id" property="toRoleId" />
+        <result column="from_user_id" property="fromUserId" />
+         <result column="from_status_id" property="fromStatusId" />
+        <result column="to_status_id" property="toStatusId" />
+        <result column="begin_time" property="beginTime" />
+        <result column="end_time" property="endTime" />
+        <result column="created_user" property="createdUser" />
+        <result column="config_version" property="configVersion"/>
+        <result column="updated_user" property="updatedUser" />
+        <result column="created_time" property="createdTime" />
+        <result column="updated_time" property="updatedTime" />
+        <result column="description" property="description" />
+        <association property="process" javaType="com.xdcplus.interaction.common.pojo.entity.Process" columnPrefix="process_">
+            <id column="id" property="id" />
+            <result column="name" property="name" />
+            <result column="created_user" property="createdUser" />
+            <result column="updated_user" property="updatedUser" />
+            <result column="created_time" property="createdTime" />
+            <result column="updated_time" property="updatedTime" />
+            <result column="description" property="description" />
+        </association>
+        <association property="request" javaType="com.xdcplus.interaction.common.pojo.entity.Request" columnPrefix="req_">
+            <id column="id" property="id" />
+            <result column="odd_number" property="oddNumber" />
+            <result column="process_id" property="processId" />
+            <result column="title" property="title" />
+            <result column="status_id" property="statusId" />
+             <result column="rule_id" property="ruleId" />
+            <result column="config_version"  property="configVersion"/>
+            <result column="created_user" property="createdUser" />
+            <result column="updated_user" property="updatedUser" />
+            <result column="created_time" property="createdTime" />
+            <result column="updated_time" property="updatedTime" />
+            <result column="description" property="description" />
+        </association>
+        <association property="fromStatus" javaType="com.xdcplus.interaction.common.pojo.entity.ProcessStatus" columnPrefix="ps1_">
+            <id column="id" property="id" />
+            <result column="name" property="name" />
+            <result column="mark" property="mark"/>
+            <result column="created_user" property="createdUser" />
+            <result column="updated_user" property="updatedUser" />
+            <result column="created_time" property="createdTime" />
+            <result column="updated_time" property="updatedTime" />
+            <result column="description" property="description" />
+        </association>
+        <association property="toStatus" javaType="com.xdcplus.interaction.common.pojo.entity.ProcessStatus" columnPrefix="ps2_">
+            <id column="id" property="id" />
+            <result column="name" property="name" />
+            <result column="mark" property="mark"/>
+            <result column="created_user" property="createdUser" />
+            <result column="updated_user" property="updatedUser" />
+            <result column="created_time" property="createdTime" />
+            <result column="updated_time" property="updatedTime" />
+            <result column="description" property="description" />
+        </association>
+        <association property="flowOption" javaType="com.xdcplus.interaction.common.pojo.entity.FlowOption" columnPrefix="fo_">
+            <id column="id" property="id" />
+            <result column="value" property="value" />
+            <result column="value_string" property="valueString" />
+            <result column="created_user" property="createdUser" />
+            <result column="updated_user" property="updatedUser" />
+            <result column="created_time" property="createdTime" />
+            <result column="updated_time" property="updatedTime" />
+            <result column="description" property="description" />
+        </association>
+
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, request_id, from_status_id, to_status_id, from_user_id, to_role_id, to_user_id,
+        flow_option_value, begin_time, end_time, config_version, created_user, updated_user, created_time,
+        updated_time, description
+    </sql>
+
+    <sql id="Request_Flow_Column_List">
+        ${alias}.id as id, ${alias}.request_id as request_id, ${alias}.from_status_id as from_status_id,
+        ${alias}.to_status_id as to_status_id, ${alias}.from_user_id as from_user_id,
+        ${alias}.to_role_id as to_role_id, ${alias}.to_user_id as to_user_id,
+        ${alias}.flow_option_value as flow_option_value, ${alias}.begin_time as begin_time,
+        ${alias}.end_time as end_time, ${alias}.config_version as config_version, ${alias}.created_user as created_user,
+        ${alias}.updated_user as updated_user, ${alias}.created_time as created_time,
+        ${alias}.updated_time as updated_time, ${alias}.description as description
+    </sql>
+
+    <sql id="Request_Column_List">
+        ${alias}.id as ${alias}_id, ${alias}.odd_number as ${alias}_odd_number, ${alias}.process_id as ${alias}_process_id,
+        ${alias}.title as ${alias}_title, ${alias}.status_id as ${alias}_status_id, ${alias}.rule_id as ${alias}_rule_id,
+        ${alias}.config_version as ${alias}_config_version, ${alias}.created_user as ${alias}_created_user,
+        ${alias}.updated_user as ${alias}_updated_user, ${alias}.created_time as ${alias}_created_time,
+        ${alias}.updated_time as ${alias}_updated_time, ${alias}.description as ${alias}_description
+    </sql>
+
+    <sql id="Process_Column_List">
+        ${alias}.id as ${alias}_id,${alias}.name as ${alias}_name,${alias}.created_user as ${alias}_created_user,
+        ${alias}.updated_user as ${alias}_updated_user,${alias}.created_time as ${alias}_created_time,
+        ${alias}.updated_time as ${alias}_updated_time,${alias}.description as ${alias}_description
+    </sql>
+
+    <sql id="Process_Status_Column_List">
+        ${alias}.id as ${alias}_id, ${alias}.name as ${alias}_name, ${alias}.mark as ${alias}_mark,
+        ${alias}.created_user as ${alias}_created_user, ${alias}.updated_user as ${alias}_updated_user,
+        ${alias}.created_time as ${alias}_created_time, ${alias}.updated_time as ${alias}_updated_time,
+        ${alias}.description as ${alias}_description
+    </sql>
+
+    <sql id="Flow_Option_Column_List">
+        ${alias}.id as ${alias}_id, ${alias}.value as ${alias}_value, ${alias}.value_string as ${alias}_value_string,
+         ${alias}.created_user as ${alias}_created_user, ${alias}.updated_user as ${alias}_updated_user,
+         ${alias}.created_time as ${alias}_created_time, ${alias}.updated_time as ${alias}_updated_time,
+         ${alias}.description as ${alias}_description
+    </sql>
+
+    <select id="findRequestFlowByFlowOption" resultMap="BaseResultMap">
+        select
+            <include refid="Base_Column_List"/>
+        from xdc_t_request_flow
+        where flow_option_value  = #{flowOption,jdbcType=INTEGER}
+    </select>
+    <select id="findRequestFlowRequestId" resultMap="RequestFlowResultMap">
+        SELECT
+            <include refid="Request_Flow_Column_List"><property name="alias" value="flow"/></include>,
+            <include refid="Request_Column_List"><property name="alias" value="req"/></include>,
+            <include refid="Process_Column_List"><property name="alias" value="process"/></include>,
+            <include refid="Process_Status_Column_List"><property name="alias" value="ps1"/></include>,
+            <include refid="Process_Status_Column_List"><property name="alias" value="ps2"/></include>,
+            <include refid="Flow_Option_Column_List"><property name="alias" value="fo"/></include>
+        FROM
+            xdc_t_request_flow AS flow
+            LEFT JOIN xdc_t_request AS req ON flow.request_id = req.id
+            LEFT JOIN xdc_t_process AS process ON req.process_id = process.id
+            LEFT JOIN xdc_t_process_status AS ps1 ON flow.from_status_id = ps1.id
+            LEFT JOIN xdc_t_process_status AS ps2 ON flow.to_status_id = ps2.id
+            LEFT JOIN xdc_t_flow_option AS fo ON flow.flow_option_value = fo.value
+        WHERE
+            req.id = #{requestId,jdbcType=BIGINT}
+    </select>
+    <select id="findRequestFlowByRequestIdAndFromStatusId" resultMap="RequestFlowResultMap">
+        SELECT
+            <include refid="Request_Flow_Column_List"><property name="alias" value="flow"/></include>,
+            <include refid="Process_Column_List"><property name="alias" value="process"/></include>,
+            <include refid="Process_Status_Column_List"><property name="alias" value="ps1"/></include>,
+            <include refid="Process_Status_Column_List"><property name="alias" value="ps2"/></include>,
+            <include refid="Request_Column_List"><property name="alias" value="req"/></include>,
+            <include refid="Flow_Option_Column_List"><property name="alias" value="fo"/></include>
+        FROM
+            xdc_t_request_flow AS flow
+            LEFT JOIN xdc_t_request AS req ON flow.request_id = req.id
+            LEFT JOIN xdc_t_process AS process ON req.process_id = process.id
+            LEFT JOIN xdc_t_process_status AS ps1 ON flow.from_status_id = ps1.id
+            LEFT JOIN xdc_t_process_status AS ps2 ON flow.to_status_id = ps2.id
+            LEFT JOIN xdc_t_flow_option AS fo ON flow.flow_option_value = fo.value
+        <where>
+            flow.request_id = #{requestId,jdbcType=BIGINT}
+            and flow.from_status_id = #{statusId,jdbcType=BIGINT}
+        </where>
+
+    </select>
+    <select id="findRequestFlowByRequestIdAndToStatusId" resultMap="RequestFlowResultMap">
+        SELECT
+            <include refid="Request_Flow_Column_List"><property name="alias" value="flow"/></include>,
+            <include refid="Process_Column_List"><property name="alias" value="process"/></include>,
+            <include refid="Process_Status_Column_List"><property name="alias" value="ps1"/></include>,
+            <include refid="Process_Status_Column_List"><property name="alias" value="ps2"/></include>,
+            <include refid="Request_Column_List"><property name="alias" value="req"/></include>,
+            <include refid="Flow_Option_Column_List"><property name="alias" value="fo"/></include>
+        FROM
+            xdc_t_request_flow AS flow
+            LEFT JOIN xdc_t_request AS req ON flow.request_id = req.id
+            LEFT JOIN xdc_t_process AS process ON req.process_id = process.id
+            LEFT JOIN xdc_t_process_status AS ps1 ON flow.from_status_id = ps1.id
+            LEFT JOIN xdc_t_process_status AS ps2 ON flow.to_status_id = ps2.id
+            LEFT JOIN xdc_t_flow_option AS fo ON flow.flow_option_value = fo.value
+        <where>
+            flow.request_id = #{requestId,jdbcType=BIGINT}
+            and flow.to_status_id = #{statusId,jdbcType=BIGINT}
+        </where>
+
+    </select>
+    <select id="findRequestFlowByFlowOptionAndRequestId" resultMap="RequestFlowResultMap">
+        SELECT
+            <include refid="Request_Flow_Column_List"><property name="alias" value="flow"/></include>,
+            <include refid="Request_Column_List"><property name="alias" value="req"/></include>
+        FROM
+            xdc_t_request_flow AS flow
+            LEFT JOIN xdc_t_request AS req ON flow.request_id = req.id
+        <where>
+            flow.request_id = #{requestId,jdbcType=BIGINT}
+            and flow.flow_option_value = #{flowOption,jdbcType=INTEGER}
+        </where>
+    </select>
+
+</mapper>

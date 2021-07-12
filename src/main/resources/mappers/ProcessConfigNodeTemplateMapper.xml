@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xdcplus.interaction.mapper.ProcessConfigNodeTemplateMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.xdcplus.interaction.common.pojo.entity.ProcessConfigNodeTemplate">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="template_id" property="templateId" />
+        <result column="mark" property="mark" />
+        <result column="type" property="type" />
+        <result column="location_left" property="locationLeft" />
+        <result column="location_top" property="locationTop" />
+        <result column="ico" property="ico" />
+        <result column="state" property="state" />
+        <result column="qualifier_id" property="qualifierId" />
+        <result column="timeout_action" property="timeoutAction" />
+        <result column="to_user_id" property="toUserId" />
+        <result column="to_role_id" property="toRoleId" />
+        <result column="created_user" property="createdUser" />
+        <result column="updated_user" property="updatedUser" />
+        <result column="created_time" property="createdTime" />
+        <result column="updated_time" property="updatedTime" />
+        <result column="description" property="description" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, name, template_id, mark, type, location_left, location_top, ico, state, qualifier_id, timeout_action, to_user_id, to_role_id, created_user, updated_user, created_time, updated_time, description
+    </sql>
+    <select id="findTemplateNodesByTemplateId" resultMap="BaseResultMap">
+        select
+            <include refid="Base_Column_List"/>
+        from xdc_t_process_config_node_template
+        where  template_id = #{templateId,jdbcType=BIGINT}
+    </select>
+
+</mapper>

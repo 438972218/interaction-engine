@@ -1,0 +1,55 @@
+version: "3"
+
+services:
+  workflow:
+    image: 10.20.54.132:8000/workflow-engine/interaction-engine:latest
+    restart: always
+    container_name: interaction-engine
+    environment:
+      SWAGGER_DISABLE: "false"
+      MYSQL_HOST: localhost
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: workflow
+      MYSQL_USERNAME: root
+      MYSQL_PASSWORD: 123456
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      REDIS_DATABASE: 0
+      FLOWABLE_SIGNATURE_WAIT: "false"
+    ports:
+      - 10001:8080
+    expose:
+      - 8080
+    volumes:
+      - /data/workflow-engine/interaction:/logs
+    networks:
+      - workflow_engine
+
+networks:
+  workflow_engine:
+    external: true
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xdcplus.interaction.mapper.RequestMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.xdcplus.interaction.common.pojo.entity.Request">
+        <id column="id" property="id" />
+        <result column="odd_number" property="oddNumber" />
+        <result column="process_id" property="processId" />
+        <result column="title" property="title" />
+        <result column="status_id" property="statusId" />
+         <result column="rule_id" property="ruleId" />
+         <result column="config_version"  property="configVersion"/>
+        <result column="created_user" property="createdUser" />
+        <result column="updated_user" property="updatedUser" />
+        <result column="created_time" property="createdTime" />
+        <result column="updated_time" property="updatedTime" />
+        <result column="description" property="description" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, odd_number, process_id, title, status_id, rule_id, config_version,
+        created_user, updated_user, created_time, updated_time, description
+    </sql>
+    <select id="findRequestByTitle" resultMap="BaseResultMap">
+        select
+            <include refid="Base_Column_List"/>
+        from xdc_t_request as r
+        where r.title = #{title,jdbcType=VARCHAR}
+    </select>
+    <select id="findRequest" resultMap="BaseResultMap">
+         select
+            <include refid="Base_Column_List"/>
+        from xdc_t_request as r
+        <where>
+            <if test="id != null and id != ''">
+                and r.id = #{id,jdbcType=BIGINT}
+            </if>
+            <if test="title != null and title != ''">
+                and r.title = #{title,jdbcType=VARCHAR}
+            </if>
+            <if test="processId != null">
+                and r.process_id = #{processId,jdbcType=BIGINT}
+            </if>
+            <if test="oddNumber != null and oddNumber != ''">
+                and r.odd_number like  CONCAT('%', #{oddNumber,jdbcType=VARCHAR}, '%')
+            </if>
+            <if test="ids != null and ids.size() != 0">
+                and r.id in
+                <foreach collection="ids" close=")" index="index" item="item" open="(" separator=",">
+                    #{item,jdbcType=BIGINT}
+                </foreach>
+            </if>
+        </where>
+    </select>
+    <select id="findRequestByIds" resultMap="BaseResultMap">
+        select
+            <include refid="Base_Column_List"/>
+        from xdc_t_request as r
+        <where>
+            <if test="ids != null and ids.size() != 0">
+                r.id in
+                <foreach collection="ids" separator="," open="(" item="item" index="index" close=")">
+                    #{item,jdbcType=BIGINT}
+                </foreach>
+            </if>
+        </where>
+    </select>
+    <select id="findRequestByRuleId" resultMap="BaseResultMap">
+        select
+            <include refid="Base_Column_List"/>
+        from xdc_t_request
+        where rule_id = #{ruleId,jdbcType=BIGINT}
+    </select>
+    <select id="findRequestByProcessId" resultMap="BaseResultMap">
+        select
+            <include refid="Base_Column_List"/>
+        from xdc_t_request
+        where process_id = #{processId,jdbcType=BIGINT}
+    </select>
+    <update id="updateStatusIdById">
+        update xdc_t_request set status_id = #{statusId,jdbcType=BIGINT}
+        where id = #{id,jdbcType=BIGINT}
+    </update>
+    <update id="updateProcessIdAndVersionById">
+        update xdc_t_request set process_id = #{processId,jdbcType=BIGINT}, version = #{version,jdbcType=VARCHAR}
+        where id = #{requestId,jdbcType=BIGINT}
+    </update>
+
+</mapper>
