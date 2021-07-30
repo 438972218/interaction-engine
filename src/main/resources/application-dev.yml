@@ -10,20 +10,15 @@ spring:
 
   # mysql 配置
   datasource:
-    url: jdbc:mysql://localhost:3306/interaction_engine?useUnicode=true&characterEncoding=UTF-8&useSSL=false
+    url: jdbc:mysql://localhost:3306/interaction_engine_v2?useUnicode=true&characterEncoding=UTF-8&useSSL=false
     username: root
-    password: root
+    password: 123456
 
   # redis 缓存配置
   redis:
     host: localhost
     port: 6379
     database: 10
-
-# 工作流配置类
-flowable:
-  # 设置是否等待前加签同意 , false: 不用，true: 需要
-  signatureWait: false
 
 url:
   ip:
@@ -33,8 +28,16 @@ url:
     # 权限收放引擎端口
     permControlEnginePort: 9004
   path:
-    getSysUserByUserIdOrUserName: /sysUser/getSysUserByUserIdOrUserName
-
+    # 用户的上级用户信息
+    superiorUserByUser: /api/getSysUserMangerByUserIdOrUserName
+    # 总经理用户信息
+    bigBossUser: /api/getGeneralManagerSysUser
+    # 部门信息
+    departments: /api/getSysDepartmentList
+    # 部门负责人用户信息
+    departmentHeadByDepartmentId: /api/getSysUserManagerByDepartmentId/{departmentId}
+    # 用户信息
+    userInfoByName: /api/queryByUserName/{userName}
 
 
 

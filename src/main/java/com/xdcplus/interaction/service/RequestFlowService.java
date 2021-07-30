@@ -8,6 +8,7 @@ import com.xdcplus.interaction.common.pojo.entity.RequestFlow;
 import com.xdcplus.interaction.common.pojo.vo.RequestFlowVO;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * 流转意见表 服务类
@@ -26,9 +27,10 @@ public interface RequestFlowService extends BaseService<RequestFlowBO, RequestFl
 
     /**
      * 开始流程
-     * @param requestId 请求主键
+     * @param requestId 表单主键
+     * @param processTransforDTO 流转条件
      */
-    void startTransfor(Long requestId);
+    void startTransfor(Long requestId, ProcessTransforDTO processTransforDTO);
 
     /**
      * 存在流转信息 通过流选项
@@ -41,7 +43,7 @@ public interface RequestFlowService extends BaseService<RequestFlowBO, RequestFl
     /**
      *  根据表单ID 查询完成的流转信息 （流转链）
      * @param requestId 请求主键
-     * @return {@link List <RequestFlowVO>}
+     * @return {@link List <RequestFlowVO>} 流转信息
      */
     List<RequestFlowVO> findRequestFlowRequestId(Long requestId);
 
@@ -93,7 +95,14 @@ public interface RequestFlowService extends BaseService<RequestFlowBO, RequestFl
      */
     List<RequestFlowVO> findRequestFlowByRequestIdAndToStatusId(Long requestId, Long statusId);
 
-
+    /**
+     * 查询流转信息通过角色id或用户id
+     *
+     * @param roleIds 角色id
+     * @param userId  用户id
+     * @return {@link List<RequestFlowVO>} 流转信息
+     */
+    List<RequestFlowVO> findRequestFlowByRoleIdsOrUserIds(Set<Long> roleIds, Long userId);
 
 
 

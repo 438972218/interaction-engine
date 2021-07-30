@@ -9,9 +9,14 @@ import com.xdcplus.interaction.common.enums.ResponseEnum;
 import com.xdcplus.interaction.common.exception.InteractionEngineException;
 import com.xdcplus.interaction.common.pojo.dto.ProcessConfigLineDTO;
 import com.xdcplus.interaction.common.pojo.dto.ProcessConfigNodeDTO;
+import com.xdcplus.interaction.common.pojo.dto.ProcessTransforDTO;
+import com.xdcplus.interaction.common.validator.groupvlidator.ProcessTransforAdditionalSignGroupValidator;
+import com.xdcplus.interaction.common.validator.groupvlidator.ProcessTransforAgreeGroupValidator;
+import com.xdcplus.interaction.common.validator.groupvlidator.ProcessTransforSendBackGroupValidator;
 import com.xdcplus.tool.constants.NumberConstant;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.validation.Validation;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,6 +53,36 @@ public class ProcessValidationUtils {
             validationOfValidity(configLines, configNodes, a.getTo());
         }
 
+    }
+
+    /**
+     * 验证过程转移
+     *
+     * @param processTransforDTO 过程转移DTO
+     */
+    public static void validationProcessTransfor(ProcessTransforDTO processTransforDTO) {
+
+        javax.validation.Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+
+        Integer flowOption = processTransforDTO.getFlowOption();
+        switch (flowOption) {
+            case 1:
+                validator.validate(processTransforDTO, ProcessTransforAgreeGroupValidator.class);
+                break;
+            case 2:
+                validator.validate(processTransforDTO, ProcessTransforSendBackGroupValidator.class);
+                break;
+            case 3:
+                break;
+            case 4:
+                break;
+            case 5:
+            case 6:
+                validator.validate(processTransforDTO, ProcessTransforAdditionalSignGroupValidator.class);
+                break;
+            default:
+                break;
+        }
     }
 
     /**
@@ -100,7 +135,7 @@ public class ProcessValidationUtils {
     /**
      * 获取开始线
      *
-     * @param configLines 配置线
+     * @param configLines   配置线
      * @param startNodeMark 开始节点标识
      * @return {@link ProcessConfigLineDTO} 开始线
      */
@@ -180,18 +215,6 @@ public class ProcessValidationUtils {
     private static void throwException(Object object, ResponseEnum responseEnum) {
         Assert.notNull(object, responseEnum.getMessage());
     }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 }

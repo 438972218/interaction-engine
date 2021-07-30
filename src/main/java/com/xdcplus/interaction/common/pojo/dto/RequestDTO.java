@@ -53,11 +53,11 @@ public class RequestDTO extends BaseBO implements Serializable {
     private Set<Long> parentIds;
 
     /**
-     * 流程配置版本号
+     * 流转条件
      */
-    @NotBlank(message = "流程配置版本号 不能为空")
-    @ApiModelProperty(value = "流程配置版本号", required = true)
-    private String configVersion;
+    @ApiModelProperty(value = "流转条件")
+    private ProcessTransforDTO processTransfor;
+
 
     public Set<Long> getParentIds() {
 

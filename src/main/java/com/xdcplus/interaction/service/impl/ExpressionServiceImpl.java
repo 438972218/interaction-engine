@@ -111,4 +111,12 @@ public class ExpressionServiceImpl extends BaseServiceImpl<Expression, Expressio
         List<Expression> expressionList = expressionMapper.findAll();
         return this.objectConversion(expressionList);
     }
+
+    @Override
+    public ExpressionVO findOne(Long id) {
+
+        Assert.notNull(id, ResponseEnum.THE_ID_CANNOT_BE_EMPTY.getMessage());
+
+        return super.objectConversion(this.getById(id));
+    }
 }

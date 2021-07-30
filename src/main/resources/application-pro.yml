@@ -20,11 +20,6 @@ spring:
     port:  ${REDIS_PORT}
     database: ${REDIS_DATABASE}
 
-# 工作流配置类
-flowable:
-  # 设置是否等待前加签同意 , false: 不用，true: 需要
-  signatureWait: ${FLOWABLE_SIGNATURE_WAIT:false}
-
 url:
   ip:
     # 权限收放引擎IP
@@ -33,10 +28,16 @@ url:
     # 权限收放引擎端口
     permControlEnginePort: ${PERMISSION_CONTROL_ENGINE_PORT}
   path:
-    getSysUserByUserIdOrUserName: ${GET_USER_BY_ID_OR_NAME:/sysUser/getSysUserByUserIdOrUserName}
-
-
-
+    # 用户的上级用户信息
+    superiorUserByUser: ${SUPERIOR_USER_BY_USER:/api/getSysUserMangerByUserIdOrUserName}
+    # 总经理用户信息
+    bigBossUser: ${BIG_BOSS_USER:/api/getGeneralManagerSysUser}
+    # 部门信息
+    departments: ${DEPARTMENTS:/api/getSysDepartmentList}
+    # 部门负责人用户信息
+    departmentHeadByDepartmentId: ${EPARTMENT_HEAD_BY_DEPARTMENT_ID:/api/getSysUserManagerByDepartmentId/{departmentId}}
+    # 用户信息
+    userInfoByName: ${USERINFO_BY_NAME:/api/queryByUserName/{userName}}
 
 
 

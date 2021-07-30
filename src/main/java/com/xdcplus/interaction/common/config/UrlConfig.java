@@ -27,28 +27,6 @@ public class UrlConfig {
     private Map<String, Integer> port = new HashMap<>();
 
     /**
-     * Http 接口调用路径
-     */
-    private ServerPath path = new ServerPath();
-
-
-    /**
-     * Http 接口调用路径
-     *
-     * @author Rong.Jia
-     * @date 2021/07/02
-     */
-    @Data
-    public static class ServerPath {
-
-        /**
-         * 根据账号，ID获取用户信息
-         */
-        private String getSysUserByUserIdOrUserName;
-
-    }
-
-    /**
      * 完整url
      */
     private String wholeUrl;
@@ -141,14 +119,6 @@ public class UrlConfig {
 
     public void setPort(Map<String, Integer> port) {
         this.port = port;
-    }
-
-    public ServerPath getPath() {
-        return path;
-    }
-
-    public void setPath(ServerPath path) {
-        this.path = path;
     }
 
     /**

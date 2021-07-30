@@ -69,6 +69,16 @@ public interface ProcessConfigMapper extends IBaseMapper<ProcessConfig> {
     List<ProcessConfigBO> findConfigAssociatedByProcessId(@Param("processId") Long processId,
                                                           @Param("version") String version);
 
+    /**
+     * 根据流程ID获取历史配置版本号集合
+     *
+     * @param processId 流程ID
+     * @return {@link List<String>}  历史配置版本号集合
+     */
+    List<String> findConfigVersionByProcessId(@Param("processId") Long processId);
+
+
+
 
 
 

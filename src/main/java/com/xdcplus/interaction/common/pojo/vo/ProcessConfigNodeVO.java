@@ -22,6 +22,12 @@ public class ProcessConfigNodeVO extends BaseBO implements Serializable {
     private static final long serialVersionUID = 8114964092623522792L;
 
     /**
+     * 用户去向
+     */
+    @ApiModelProperty(value = "用户去向")
+    private Long userTo;
+
+    /**
      * 流程主键
      */
     @ApiModelProperty("流程主键")

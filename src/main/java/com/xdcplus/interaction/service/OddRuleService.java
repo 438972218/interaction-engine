@@ -60,7 +60,13 @@ public interface OddRuleService extends BaseService<OddRule, OddRuleVO, OddRule>
      */
     OddRuleVO findOne(Long ruleId);
 
-
+    /**
+     * 验证规则存在
+     *
+     * @param nameOrPrefix 规则名称或者前缀
+     * @return {@link Boolean} 是否存在
+     */
+    Boolean validationRuleExists(String nameOrPrefix);
 
 
 

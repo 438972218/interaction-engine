@@ -1,11 +1,13 @@
 package com.xdcplus.interaction.mapper;
 
+import com.xdcplus.interaction.common.pojo.vo.RequestFlowVO;
 import com.xdcplus.mp.mapper.IBaseMapper;
 import com.xdcplus.interaction.common.pojo.bo.RequestFlowBO;
 import com.xdcplus.interaction.common.pojo.entity.RequestFlow;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * 流转意见表 Mapper 接口
@@ -56,6 +58,23 @@ public interface RequestFlowMapper extends IBaseMapper<RequestFlow> {
      */
     List<RequestFlowBO> findRequestFlowByFlowOptionAndRequestId(@Param("flowOption") Integer flowOption,
                                                         @Param("requestId") Long requestId);
+
+    /**
+     * 查询流转信息通过角色id或用户id
+     *
+     * @param roleIds 角色id
+     * @param userId  用户id
+     * @return {@link List<RequestFlowBO>} 流转信息
+     */
+    List<RequestFlowBO> findRequestFlowByRoleIdsOrUserIds(@Param("roleIds") Set<Long> roleIds,
+                                                          @Param("userId") Long userId);
+
+
+
+
+
+
+
 
 
 

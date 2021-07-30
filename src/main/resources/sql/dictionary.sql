@@ -47,7 +47,11 @@ INSERT IGNORE INTO `xdc_t_dictionary` (`id`, `dictionary_chinese`, `dictionary_c
 # INSERT IGNORE INTO `xdc_t_dictionary` (`id`, `dictionary_chinese`, `dictionary_class`, `meaning`, `numerical`) VALUES (11, '节点类型', 'nodeType', '子流程节点', 5);
 INSERT IGNORE INTO `xdc_t_dictionary` (`id`, `dictionary_chinese`, `dictionary_class`, `meaning`, `numerical`) VALUES (12, '条件分发', 'ConditionsDistribution', '是', 1);
 INSERT IGNORE INTO `xdc_t_dictionary` (`id`, `dictionary_chinese`, `dictionary_class`, `meaning`, `numerical`) VALUES (13, '节点类型', 'ConditionsDistribution', '否', 2);
-
+INSERT IGNORE INTO `xdc_t_dictionary` (`id`, `dictionary_chinese`, `dictionary_class`, `meaning`, `numerical`) VALUES (14, '表单办理事项', 'RequestHandleMatters', '我的事项', 1);
+INSERT IGNORE INTO `xdc_t_dictionary` (`id`, `dictionary_chinese`, `dictionary_class`, `meaning`, `numerical`) VALUES (15, '表单办理事项', 'RequestHandleMatters', '未办事项', 2);
+INSERT IGNORE INTO `xdc_t_dictionary` (`id`, `dictionary_chinese`, `dictionary_class`, `meaning`, `numerical`) VALUES (16, '表单办理事项', 'RequestHandleMatters', '已办事项', 3);
+INSERT IGNORE INTO `xdc_t_dictionary` (`id`, `dictionary_chinese`, `dictionary_class`, `meaning`, `numerical`) VALUES (17, '表单办理事项', 'RequestHandleMatters', '历史事项', 4);
+INSERT IGNORE INTO `xdc_t_dictionary` (`id`, `dictionary_chinese`, `dictionary_class`, `meaning`, `numerical`) VALUES (18, '表单办理事项', 'RequestHandleMatters', '督办事项', 5);
 
 
 

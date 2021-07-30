@@ -177,7 +177,7 @@ CREATE TABLE IF NOT EXISTS `xdc_t_qualifier`  (
 -- Table structure for xdc_t_request
 -- ----------------------------
 # DROP TABLE IF EXISTS `xdc_t_request`;
-CREATE TABLE `xdc_t_request`  (
+CREATE TABLE IF NOT EXISTS `xdc_t_request`  (
   `id` bigint(20) NOT NULL COMMENT '主键',
   `odd_number` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '单号',
   `process_id` bigint(20) NOT NULL COMMENT ' 流程ID',
@@ -220,11 +220,12 @@ CREATE TABLE  IF NOT EXISTS `xdc_t_request_relation`  (
 # DROP TABLE IF EXISTS `xdc_t_process_config`;
 CREATE TABLE IF NOT EXISTS `xdc_t_process_config`  (
   `id` bigint(20) NOT NULL COMMENT '主键',
-  `process_id` bigint(20) NOT NULL COMMENT '流程明细表ID',
-  `from_status_id` bigint(20) NOT NULL COMMENT '上一个流程状态ID',
-  `to_status_id` bigint(20) NOT NULL COMMENT '目标流程状态ID',
+  `process_id` bigint(20) NULL DEFAULT NULL COMMENT '流程明细表ID',
+  `from_status_id` bigint(20) NULL DEFAULT NULL COMMENT '上一个流程状态ID',
+  `to_status_id` bigint(20) NULL DEFAULT NULL COMMENT '目标流程状态ID',
   `to_role_id` bigint(20) NULL DEFAULT NULL COMMENT '角色ID',
   `to_user_id` bigint(20) NULL DEFAULT NULL COMMENT '用户ID',
+  `user_to` bigint(20) NULL DEFAULT NULL COMMENT '用户ID-去向',
   `qualifier_id` bigint(20) NULL DEFAULT NULL COMMENT '规则条件ID',
   `timeout_action` bigint(20) NULL DEFAULT NULL COMMENT '超时时间（超时后可流转下一节点）默认24小时，单位：毫秒',
   `version` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '版本',
@@ -234,10 +235,13 @@ CREATE TABLE IF NOT EXISTS `xdc_t_process_config`  (
   `updated_time` bigint(20) NULL DEFAULT NULL COMMENT '修改时间',
   `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '描述',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '流程配置表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '流程配置表' ROW_FORMAT = Dynamic;
+
 -- ----------------------------
 -- Records of xdc_t_process_config
 -- ----------------------------
+
+
 
 -- ----------------------------
 -- Table structure for xdc_t_process_config_line
@@ -308,75 +312,6 @@ CREATE TABLE IF NOT EXISTS `xdc_t_request_flow`  (
 -- Records of xdc_t_request_flow
 -- ----------------------------
 
--- ----------------------------
--- Table structure for xdc_t_process_config_line_template
--- ----------------------------
-# DROP TABLE IF EXISTS `xdc_t_process_config_line_template`;
-CREATE TABLE IF NOT EXISTS `xdc_t_process_config_line_template`  (
-  `id` bigint(20) NOT NULL COMMENT '主键',
-  `from_mark` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '开始',
-  `to_mark` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '目标',
-  `template_id` bigint(20) NULL DEFAULT NULL COMMENT '模板ID',
-  `created_user` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '添加人',
-  `updated_user` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '修改人',
-  `created_time` bigint(20) NULL DEFAULT NULL COMMENT '创建时间',
-  `updated_time` bigint(20) NULL DEFAULT NULL COMMENT '修改时间',
-  `description` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '描述',
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '流程配置线模板' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of xdc_t_process_config_line_template
--- ----------------------------
-
--- ----------------------------
--- Table structure for xdc_t_process_config_node_template
--- ----------------------------
-# DROP TABLE IF EXISTS `xdc_t_process_config_node_template`;
-CREATE TABLE IF NOT EXISTS `xdc_t_process_config_node_template`  (
-  `id` bigint(20) NOT NULL COMMENT '主键',
-  `name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '节点名',
-  `template_id` bigint(20) NULL DEFAULT NULL COMMENT '模板ID',
-  `mark` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '标识',
-  `type` int(11) NULL DEFAULT NULL COMMENT '节点类型',
-  `location_left` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '位置左， 单位\"px\"',
-  `location_top` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '下， 单位\"px\"',
-  `ico` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '图标',
-  `state` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '状态， success: 成功，warning: 警告，error: 错误，running：运行中',
-  `qualifier_id` bigint(20) NULL DEFAULT NULL COMMENT '条件主键',
-  `timeout_action` bigint(20) NULL DEFAULT NULL COMMENT '超时时间（超时后可流转下一节点）默认24小时， 单位：毫秒',
-  `to_user_id` bigint(20) NULL DEFAULT NULL COMMENT '用户ID',
-  `to_role_id` bigint(20) NULL DEFAULT NULL COMMENT '角色ID',
-  `created_user` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '添加人',
-  `updated_user` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '修改人',
-  `created_time` bigint(20) NULL DEFAULT NULL COMMENT '创建时间',
-  `updated_time` bigint(20) NULL DEFAULT NULL COMMENT '修改时间',
-  `description` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '描述',
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '流程配置节点模板' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of xdc_t_process_config_node_template
--- ----------------------------
-
--- ----------------------------
--- Table structure for xdc_t_process_config_template
--- ----------------------------
-# DROP TABLE IF EXISTS `xdc_t_process_config_template`;
-CREATE TABLE IF NOT EXISTS `xdc_t_process_config_template`  (
-  `id` bigint(20) NOT NULL COMMENT '主键',
-  `name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '模板名',
-  `created_user` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '添加人',
-  `updated_user` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '修改人',
-  `created_time` bigint(20) NULL DEFAULT NULL COMMENT '创建时间',
-  `updated_time` bigint(20) NULL DEFAULT NULL COMMENT '修改时间',
-  `description` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '描述',
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '流程配置模板信息' ROW_FORMAT = Dynamic;
-
--- ----------------------------
--- Records of xdc_t_process_config_template
--- ----------------------------
 
 -- ----------------------------
 -- Table structure for xdc_t_user_to
@@ -401,6 +336,7 @@ INSERT IGNORE INTO `xdc_t_user_to` VALUES (1, 1, NULL, NULL, NULL, NULL, NULL, '
 INSERT IGNORE INTO `xdc_t_user_to` VALUES (2, 2, NULL, NULL, NULL, NULL, NULL, '审批者直接上级');
 INSERT IGNORE INTO `xdc_t_user_to` VALUES (3, 3, NULL, NULL, NULL, NULL, NULL, '总经理');
 INSERT IGNORE INTO `xdc_t_user_to` VALUES (4, 4, NULL, NULL, NULL, NULL, NULL, '创建人');
+INSERT IGNORE INTO `xdc_t_user_to` VALUES (5, 5, NULL, NULL, NULL, NULL, NULL, '部门负责人');
 
 
 

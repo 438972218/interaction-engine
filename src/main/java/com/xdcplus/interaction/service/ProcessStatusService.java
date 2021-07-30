@@ -91,6 +91,13 @@ public interface ProcessStatusService extends BaseService<ProcessStatus, Process
     ProcessStatusVO getProcessStatus(String name, String mark);
 
 
+    /**
+     * 验证流程状态信息是否存在
+     *
+     * @param name 名字
+     * @return {@link Boolean} 是否存在
+     */
+    Boolean validationExists(String name);
 
 
 

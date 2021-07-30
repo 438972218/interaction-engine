@@ -34,7 +34,6 @@ public class CancelProcessTransfor extends BaseProcessTransfor {
 
         log.info("Cancel the processing operation");
 
-        Long toUserId = processTransforParam.getToUserId();
         Long userId = processTransforParam.getUserId();
         RequestVO requestVO = processTransforParam.getRequest();
 
@@ -44,7 +43,9 @@ public class CancelProcessTransfor extends BaseProcessTransfor {
         ProcessStatusVO processStatusVO = super.findProcessStatusByMark(Convert.toStr(NumberConstant.ZERO));
 
         List<RequestFlowVO> requestFlowVOList = super.requestFlowService.findRequestFlowByRequestIdAndFromStatusId(requestVO.getId(), processStatusVO.getId());
-        if (ObjectUtil.isNull(requestFlowVOList.stream().filter(a -> ObjectUtil.equal(toUserId, a.getToUserId())).findAny().orElse(null))) {
+        if (ObjectUtil.isNull(requestFlowVOList.stream()
+                .filter(a -> ObjectUtil.equal(userId, a.getToUserId()))
+                .findAny().orElse(null))) {
             log.error("A list can only be cancelled by the creator");
             throw new InteractionEngineException(ResponseEnum.A_LIST_CAN_ONLY_BE_CANCELLED_BY_THE_CREATOR);
         }
@@ -69,6 +70,7 @@ public class CancelProcessTransfor extends BaseProcessTransfor {
                 .toStatusId(processStatusVO.getId())
                 .fromUserId(userId)
                 .toUserId(userId)
+                .configVersion(requestVO.getConfigVersion())
                 .endTime(DateUtil.current())
                 .build();
 

@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.Assert;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.xdcplus.interaction.common.enums.ResponseEnum;
 import com.xdcplus.interaction.common.exception.InteractionEngineException;
@@ -91,9 +92,16 @@ public class ProcessConfigNodeServiceImpl extends BaseServiceImpl<ProcessConfigN
     public ProcessConfigNodeVO objectConversion(ProcessConfigNode processConfigNode) {
 
         ProcessConfigNodeVO processConfigNodeVO = super.objectConversion(processConfigNode);
-        processConfigNodeVO.setLeft(processConfigNode.getLocationLeft());
-        processConfigNodeVO.setTop(processConfigNode.getLocationTop());
+        if (ObjectUtil.isNotNull(processConfigNodeVO)) {
+            processConfigNodeVO.setLeft(processConfigNode.getLocationLeft());
+            processConfigNodeVO.setTop(processConfigNode.getLocationTop());
+        }
 
         return processConfigNodeVO;
+    }
+
+    @Override
+    public ProcessConfigNode findConfigNode(Long processId, String mark, String version) {
+        return processConfigNodeMapper.findConfigNodeByProcessIdAndVersionAndMark(processId, mark, version);
     }
 }

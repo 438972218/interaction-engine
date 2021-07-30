@@ -6,10 +6,9 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.xdcplus.interaction.common.enums.ResponseEnum;
 import com.xdcplus.interaction.common.exception.InteractionEngineException;
-import com.xdcplus.interaction.common.pojo.vo.RequestVO;
-import com.xdcplus.interaction.factory.user.UserToProcess;
+import com.xdcplus.interaction.factory.user.UserDestinationFactory;
+import com.xdcplus.interaction.factory.user.UserDestinationParam;
 import com.xdcplus.tool.constants.NumberConstant;
-import com.xdcplus.interaction.common.config.FlowableConfig;
 import com.xdcplus.interaction.common.pojo.dto.RequestFlowDTO;
 import com.xdcplus.interaction.common.pojo.vo.ProcessConfigVO;
 import com.xdcplus.interaction.common.pojo.vo.ProcessStatusVO;
@@ -21,7 +20,9 @@ import com.xdcplus.interaction.service.RequestService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -40,22 +41,13 @@ public class BaseProcessTransfor implements ProcessTransfor {
     RequestService requestService;
 
     @Autowired
-    FlowableConfig flowableConfig;
-
-    @Autowired
     ProcessStatusService processStatusService;
 
     @Autowired
     ProcessConfigService processConfigService;
 
-    /**
-     * 是否等待前加签同意
-     *
-     * @return boolean true/false
-     */
-    boolean isSignatureWait() {
-        return flowableConfig.getSignatureWait();
-    }
+    @Autowired
+    UserDestinationFactory userDestinationFactory;
 
     /**
      * 查询配置配置
@@ -67,7 +59,8 @@ public class BaseProcessTransfor implements ProcessTransfor {
      * @return {@link List<ProcessConfigVO>} 流程配置信息
      */
     List<ProcessConfigVO> findConfigByProcessIdAndFromStatusId(Long processId,
-                                                               Long statusId, String version, Long userId, String requestCreatedUser) {
+                                                               Long statusId, String version,
+                                                               Long userId, String requestCreatedUser) {
 
         List<ProcessConfigVO> processConfigVOList =  processConfigService.findConfigByProcessIdAndFromStatusId(processId, statusId, version);
 
@@ -76,30 +69,20 @@ public class BaseProcessTransfor implements ProcessTransfor {
             throw new InteractionEngineException(ResponseEnum.A_VALID_PROCESS_CONFIGURATION_WAS_NOT_FOUND);
         }
 
-        processConfigVOList.forEach(a -> a.setToUserId(UserToProcess.getToUserId(a.getToUserId(), userId, requestCreatedUser)));
+
+        processConfigVOList.forEach(a -> {
+
+            UserDestinationParam userDestinationParam = UserDestinationParam.builder()
+                    .createUserName(requestCreatedUser)
+                    .userId(userId)
+                    .userTo(a.getUserTo())
+                    .userToType(a.getToUserId())
+                    .build();
+
+            Optional.ofNullable(userDestinationFactory.postProcess(userDestinationParam))
+                    .ifPresent(a::setToUserId);
+        });
         return processConfigVOList;
-    }
-
-    /**
-     * 判断 当前流程是否有加签，有则返回
-     *
-     * @param requestId 表单主键
-     * @param statusId  状态主键
-     * @return {@link List<RequestFlowVO>}  加签过程中数据
-     */
-    List<RequestFlowVO> getBeforeCountersign(Long requestId, Long statusId) {
-
-        // 如果是非被加签人操作， 需要获取是否有加签
-        List<RequestFlowVO> requestFlowVOList = requestFlowService.findRequestFlowByRequestIdAndFromStatusId(requestId, statusId);
-        if (CollectionUtil.isNotEmpty(requestFlowVOList)) {
-
-            return requestFlowVOList.stream()
-                    .filter(a -> ObjectUtil.equal(NumberConstant.SIX, a.getToStatus().getMark())
-                            && ObjectUtil.equal(NumberConstant.A_NEGATIVE, a.getFlowOption().getValue()))
-                    .collect(Collectors.toList());
-        }
-
-        return null;
     }
 
     /**
@@ -122,17 +105,6 @@ public class BaseProcessTransfor implements ProcessTransfor {
         } else {
             requestFlowService.updateRequestFlow(requestFlowDTO);
         }
-    }
-
-
-    /**
-     * 获取流操作， 用于切换  是否等待前加签
-     *
-     * @param flowOption 流选项
-     * @return {@link Integer} 流选项  value
-     */
-    Integer getFlowOption(Integer flowOption) {
-        return flowableConfig.getSignatureWait() ? flowOption : NumberConstant.A_NEGATIVE;
     }
 
     /**
@@ -169,12 +141,12 @@ public class BaseProcessTransfor implements ProcessTransfor {
      * @param toUserId  来用户主键
      * @param roleIds   用户拥有角色
      * @param requestId 表单主键
-     * @return {@link RequestFlowVO}
+     * @return {@link RequestFlowVO} 流转节点
      */
     RequestFlowVO getCurrentRequestFlow(Long requestId, Long statusId, Long toUserId, List<Long> roleIds) {
 
         List<RequestFlowVO> requestFlowVOList = getCurrentRequestFlows(requestId, statusId, toUserId, roleIds);
-        RequestFlowVO requestFlowVO = null;
+        RequestFlowVO requestFlowVO;
 
         if (CollectionUtil.isNotEmpty(requestFlowVOList) && requestFlowVOList.size() > NumberConstant.ONE) {
             requestFlowVO = requestFlowVOList.stream()
@@ -200,11 +172,11 @@ public class BaseProcessTransfor implements ProcessTransfor {
      * @param statusId  状态主键
      * @param toUserId  来用户主键
      * @param roleIds   用户拥有角色
-     * @return {@link List<RequestFlowVO>}
+     * @return {@link List<RequestFlowVO>} 流转信息
      */
     List<RequestFlowVO> getCurrentRequestFlows(Long requestId, Long statusId, Long toUserId, List<Long> roleIds) {
 
-        List<RequestFlowVO> currentRequestFlows = this.getCurrentRequestFlows(requestId, statusId);
+        List<RequestFlowVO> currentRequestFlows = this.getRequestFlows(requestId, statusId);
 
         return currentRequestFlows.stream()
                 .filter(a -> {
@@ -225,13 +197,13 @@ public class BaseProcessTransfor implements ProcessTransfor {
     }
 
     /**
-     * 查询当前的流转节点
+     * 查询流转节点
      *
      * @param requestId 表单主键
      * @param statusId  表单状态主键
      * @return {@link List<RequestFlowVO>}  流程当前节点, 如果是会签，或者多加签则为多个
      */
-    List<RequestFlowVO> getCurrentRequestFlows(Long requestId, Long statusId) {
+    List<RequestFlowVO> getRequestFlows(Long requestId, Long statusId) {
 
         List<RequestFlowVO> requestFlowVOList = requestFlowService.findRequestFlowByRequestIdAndToStatusId(requestId, statusId);
 
@@ -244,65 +216,35 @@ public class BaseProcessTransfor implements ProcessTransfor {
     }
 
     /**
-     * 查询上一个状态
+     * 获取最近一条非加签流转记录
      *
      * @param requestFlowVOList 流转信息集合
-     * @param fromStatusId      上一个状态ID
-     * @param mark              状态标识
-     * @return {@link RequestFlowVO} 流转信息
+     * @param currentFlowId 当前流转节点ID
+     * @param mark 标识
+     * @return {@link RequestFlowVO} 非加签流转记录
      */
-    RequestFlowVO getLastStatusRequestFlow(List<RequestFlowVO> requestFlowVOList, Long fromUserId,
-                                           Long fromStatusId, Long currentFlowId, Integer mark) {
+    RequestFlowVO getRecentUnsignedFlow(List<RequestFlowVO> requestFlowVOList, Long currentFlowId, Integer mark) {
 
-        if (ObjectUtil.isNotNull(currentFlowId)) {
-            requestFlowVOList.removeIf(a -> ObjectUtil.equal(a.getId(), currentFlowId));
-        }
+        requestFlowVOList.removeIf(a -> ObjectUtil.equal(a.getId(), currentFlowId));
+        requestFlowVOList.removeIf(a -> ObjectUtil.notEqual(a.getFlowOption(), mark));
 
-        RequestFlowVO requestFlowVO = null;
-
-        while (true) {
-
-            List<RequestFlowVO> lastStatusRequestFlows = getLastStatusRequestFlows(requestFlowVOList, fromStatusId);
-            if (existCountersignLastStatusRequestFlow(lastStatusRequestFlows, mark)) {
-                for (RequestFlowVO lastStatusRequestFlow : lastStatusRequestFlows) {
-                    fromStatusId = lastStatusRequestFlow.getToStatus().getId();
-                    requestFlowVOList.removeIf(a -> ObjectUtil.equal(a.getId(), lastStatusRequestFlow.getId()));
-                }
-            } else {
-
-                requestFlowVO = lastStatusRequestFlows.stream()
-                        .filter(a -> ObjectUtil.equal(fromUserId, a.getToUserId()))
-                        .findAny().orElse(null);
-                break;
-            }
-        }
-
-        return requestFlowVO;
-    }
-
-    /**
-     * 在历史流程中判断 当前节点的上一个节点是否存在加签
-     *
-     * @param requestFlowVOList 历史流程
-     * @param mark              状态标识
-     * @return {@link Boolean} true: 存在， false: 不存在
-     */
-    Boolean existCountersignLastStatusRequestFlow(List<RequestFlowVO> requestFlowVOList, Integer mark) {
-        return requestFlowVOList.stream().anyMatch(a -> ObjectUtil.equal(mark, a.getToStatus().getMark()));
-    }
-
-    /**
-     * 查询当前流程的上一个流程节点
-     *
-     * @param requestFlowVOList 流转信息集合
-     * @param fromStatusId      上一个状态ID
-     * @return {@link RequestFlowVO}  流转信息集合
-     */
-    private List<RequestFlowVO> getLastStatusRequestFlows(List<RequestFlowVO> requestFlowVOList, Long fromStatusId) {
-
-        return requestFlowVOList.stream().filter(a -> ObjectUtil.equal(a.getToStatus().getId(), fromStatusId))
+        requestFlowVOList = requestFlowVOList.stream()
+                .sorted(Comparator.comparingLong(RequestFlowVO::getEndTime).reversed())
                 .collect(Collectors.toList());
 
+        // 非加签流转记录
+        RequestFlowVO nonSignedFlowRecords = null;
+
+        if (CollectionUtil.isNotEmpty(requestFlowVOList) && requestFlowVOList.size() >= NumberConstant.ONE) {
+            nonSignedFlowRecords = requestFlowVOList.get(NumberConstant.ZERO);
+        }
+
+        if (ObjectUtil.isNull(nonSignedFlowRecords)) {
+            log.error("The unsigned flow record was not obtained correctly");
+            throw new InteractionEngineException(ResponseEnum.THE_UNSIGNED_FLOW_RECORD_WAS_NOT_OBTAINED_CORRECTLY);
+        }
+
+        return nonSignedFlowRecords;
     }
 
 

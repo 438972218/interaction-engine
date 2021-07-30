@@ -61,6 +61,20 @@ public interface ProcessService extends BaseService<Process, ProcessVO, Process>
      */
     Long getProcess(String name);
 
+    /**
+     * 验证流程信息是否存在
+     *
+     * @param name 名字
+     * @return {@link Boolean} 是否存在
+     */
+    Boolean validationExists(String name);
+
+
+
+
+
+
+
 
 
 

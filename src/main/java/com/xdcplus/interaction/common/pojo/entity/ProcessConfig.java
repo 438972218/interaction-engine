@@ -49,6 +49,11 @@ public class ProcessConfig implements Serializable {
     private Long toUserId;
 
     /**
+     * 用户ID-去向
+     */
+    private Long userTo;
+
+    /**
      * 规则条件ID
      */
     private Long qualifierId;

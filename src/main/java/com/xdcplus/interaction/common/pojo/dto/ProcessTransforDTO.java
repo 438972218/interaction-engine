@@ -1,14 +1,16 @@
 package com.xdcplus.interaction.common.pojo.dto;
 
+import com.xdcplus.interaction.common.validator.groupvlidator.ProcessTransforAdditionalSignGroupValidator;
 import com.xdcplus.interaction.common.validator.groupvlidator.ProcessTransforAgreeGroupValidator;
-import com.xdcplus.interaction.common.validator.groupvlidator.ProcessTransforCountersignGroupValidator;
 import com.xdcplus.interaction.common.validator.groupvlidator.ProcessTransforGroupValidator;
 import com.xdcplus.interaction.common.validator.groupvlidator.ProcessTransforSendBackGroupValidator;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.List;
 
@@ -45,12 +47,6 @@ public class ProcessTransforDTO implements Serializable {
     private Long userId;
 
     /**
-     *  去向用户标识
-     */
-    @ApiModelProperty(value = "去向用户标识")
-    private Long toUserId;
-
-    /**
      * 描述
      */
     @ApiModelProperty("描述")
@@ -67,6 +63,12 @@ public class ProcessTransforDTO implements Serializable {
      */
     @ApiModelProperty("退回操作")
     private SendBack sendBack = new SendBack();
+
+    /**
+     * 加签操作
+     */
+    @ApiModelProperty("加签操作")
+    private AdditionalSign additional = new AdditionalSign();
 
     /**
      * 同意操作参数信息
@@ -86,7 +88,6 @@ public class ProcessTransforDTO implements Serializable {
         /**
          * 流转条件,
          */
-        @NotNull(message = "流转条件", groups = ProcessTransforAgreeGroupValidator.class)
         @ApiModelProperty(value = "流转条件")
         private Object flowConditions;
 
@@ -104,13 +105,36 @@ public class ProcessTransforDTO implements Serializable {
         /**
          *  退回状态ID
          */
-        @NotNull(message = "退回状态ID", groups = ProcessTransforSendBackGroupValidator.class)
+        @NotNull(message = "退回状态ID不能为空", groups = ProcessTransforSendBackGroupValidator.class)
         @ApiModelProperty(value = "退回状态ID")
         private Long toStatusId;
 
+        /**
+         *  去向用户标识
+         */
+        @NotNull(message = "去向用户标识不能为空", groups = ProcessTransforSendBackGroupValidator.class)
+        @ApiModelProperty(value = "去向用户标识")
+        private Long toUserId;
+
     }
 
+    /**
+     * 加签操作参数信息
+     */
+    @Data
+    public static class AdditionalSign implements Serializable {
 
+        private static final long serialVersionUID = -7048054086815373051L;
+
+        /**
+         *  去向用户标识集合
+         */
+        @NotNull(message = "去向用户标识不能为空", groups = ProcessTransforAdditionalSignGroupValidator.class)
+        @Size(min = 1, message = "去向用户标识不能为空", groups = ProcessTransforAdditionalSignGroupValidator.class)
+        @ApiModelProperty(value = "去向用户标识集合")
+        private List<Long> toUserIds;
+
+    }
 
 
 

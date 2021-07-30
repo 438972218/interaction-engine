@@ -42,7 +42,7 @@ public class DictionaryServiceImpl
         dataDictionary.setMeaning(dictionaryDTO.getMeaning());
         dataDictionary.setNumerical(dictionaryDTO.getNumerical());
 
-        dictionaryMapper.insert(dataDictionary);
+        this.save(dataDictionary);
     }
 
     @Override

@@ -56,6 +56,7 @@ public class SubmitProcessTransfor extends BaseProcessTransfor {
                 .toRoleId(processConfigVO.getToRoleId())
                 .fromUserId(userId)
                 .toUserId(processConfigVO.getToUserId())
+                .description(processTransforParam.getDescription())
                 .flowOptionValue(NumberConstant.A_NEGATIVE)
                 .configVersion(requestVO.getConfigVersion())
                 .build();

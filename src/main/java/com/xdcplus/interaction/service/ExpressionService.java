@@ -45,6 +45,13 @@ public interface ExpressionService extends BaseService<Expression, ExpressionVO,
      */
     List<ExpressionVO> findExpression();
 
+    /**
+     * 查询表达式
+     *
+     * @param id 主键
+     * @return {@link ExpressionVO} 表达式
+     */
+    ExpressionVO findOne(Long id);
 
 
 

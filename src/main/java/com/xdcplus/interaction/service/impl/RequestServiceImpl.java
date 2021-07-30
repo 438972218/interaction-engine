@@ -8,7 +8,12 @@ import cn.hutool.core.lang.Validator;
 import cn.hutool.core.util.ObjectUtil;
 import com.github.pagehelper.PageInfo;
 import com.xdcplus.interaction.common.enums.ResponseEnum;
+import com.xdcplus.interaction.common.pojo.dto.HandleMattersFilterDTO;
 import com.xdcplus.interaction.common.pojo.dto.RequestConfigDTO;
+import com.xdcplus.interaction.common.pojo.query.HandleMattersQuery;
+import com.xdcplus.interaction.common.utils.VersionUtils;
+import com.xdcplus.interaction.factory.matters.RequestHandleMattersParam;
+import com.xdcplus.interaction.factory.matters.RequestHandleMattersProcessorFactory;
 import com.xdcplus.mp.service.impl.BaseServiceImpl;
 import com.xdcplus.tool.constants.NumberConstant;
 import com.xdcplus.tool.pojo.vo.PageVO;
@@ -21,14 +26,16 @@ import com.xdcplus.interaction.common.pojo.entity.RequestRelation;
 import com.xdcplus.interaction.common.pojo.query.RequestQuery;
 import com.xdcplus.interaction.common.pojo.vo.OddRuleVO;
 import com.xdcplus.interaction.common.pojo.vo.RequestVO;
-import com.xdcplus.interaction.factory.algorithm.OddAlgorithmFactory;
+import com.xdcplus.interaction.factory.oddrule.OddAlgorithmFactory;
 import com.xdcplus.interaction.mapper.RequestMapper;
 import com.xdcplus.interaction.service.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -67,27 +74,30 @@ public class RequestServiceImpl extends BaseServiceImpl<Request, RequestVO, Requ
     @Autowired
     private ProcessConfigService processConfigService;
 
+    @Autowired
+    private RequestHandleMattersProcessorFactory requestHandleMattersProcessorFactory;
+
     @Override
     @Transactional(rollbackFor = RuntimeException.class)
     public RequestVO saveRequest(RequestDTO requestDTO) {
 
-        Request request = requestMapper.findRequestByTitle(requestDTO.getTitle());
-        Assert.isNull(request, ResponseEnum.THE_REQUEST_ALREADY_EXISTS.getMessage());
+        Request request = new Request();
         Assert.notNull(processService.findOne(requestDTO.getProcessId()),
                 ResponseEnum.THE_PROCESS_DOES_NOT_EXIST_OR_HAS_BEEN_DELETED.getMessage());
 
         OddRuleVO oddRuleVO = oddRuleService.findOne(requestDTO.getRuleId());
         Assert.notNull(oddRuleVO, ResponseEnum.THE_ORDER_NUMBER_RULE_DOES_NOT_EXIST_OR_HAS_BEEN_DELETED.getMessage());
 
-        Assert.isTrue(processConfigService.existConfigByProcessIdAndVersion(requestDTO.getProcessId(), requestDTO.getConfigVersion()),
-                ResponseEnum.THE_PROCESS_CONFIGURATION_NOT_EXIST_OR_HAS_BEEN_DELETED.getMessage());
+        List<String> configVersions = processConfigService.findConfigVersionByProcessId(requestDTO.getProcessId());
+        Assert.notEmpty(configVersions, ResponseEnum.A_VALID_PROCESS_CONFIGURATION_WAS_NOT_FOUND.getMessage());
 
-        request = new Request();
         BeanUtil.copyProperties(requestDTO, request);
         request.setCreatedTime(DateUtil.current());
         request.setStatusId(NumberConstant.ONE.longValue());
+        request.setConfigVersion(VersionUtils.maxVersion(configVersions));
 
-        String oddNumber = oddAlgorithmFactory.algorithmProcessor(oddRuleVO.getId(), oddRuleVO.getAutoNumber(),
+        String oddNumber = oddAlgorithmFactory.algorithmProcessor(oddRuleVO.getId(),
+                oddRuleVO.getAutoNumber(),
                 oddRuleVO.getPrefix(), oddRuleVO.getAlgorithm());
         request.setOddNumber(oddNumber);
 
@@ -100,7 +110,7 @@ public class RequestServiceImpl extends BaseServiceImpl<Request, RequestVO, Requ
             }
         }
 
-        requestFlowService.startTransfor(request.getId());
+        requestFlowService.startTransfor(request.getId(), requestDTO.getProcessTransfor());
 
         return this.objectConversion(request);
     }
@@ -180,6 +190,47 @@ public class RequestServiceImpl extends BaseServiceImpl<Request, RequestVO, Requ
     }
 
     @Override
+    public Boolean validationExists(String title) {
+
+        Assert.notBlank(title, ResponseEnum.THE_NAME_CANNOT_BE_EMPTY.getMessage());
+
+        return ObjectUtil.isNotNull(requestMapper.findRequestByTitle(title))
+                ? Boolean.TRUE : Boolean.FALSE;
+    }
+
+    @Override
+    public PageVO<RequestVO> handleMatters(HandleMattersFilterDTO handleMattersFilterDTO) {
+
+        PageVO<RequestVO> pageVO = new PageVO<>();
+
+        RequestHandleMattersParam requestHandleMattersParam = new RequestHandleMattersParam();
+        BeanUtil.copyProperties(handleMattersFilterDTO, requestHandleMattersParam);
+        Set<Long> requestIds = requestHandleMattersProcessorFactory.handleMattersProcessor(requestHandleMattersParam);
+
+        HandleMattersQuery handleMattersQuery = new HandleMattersQuery();
+        BeanUtil.copyProperties(handleMattersFilterDTO, handleMattersQuery);
+        handleMattersQuery.setRequestIds(requestIds);
+
+        if (handleMattersFilterDTO.getCurrentPage() > NumberConstant.ZERO) {
+            PageableUtils.basicPage(handleMattersFilterDTO);
+        }
+
+        List<Request> requestList = requestMapper.handleMatters(handleMattersQuery);
+        PageInfo<Request> pageInfo = new PageInfo<>(requestList);
+        PropertyUtils.copyProperties(pageInfo, pageVO, this.objectConversion(requestList));
+
+        return pageVO;
+    }
+
+    @Override
+    public Integer countRequestByStatusId(Long statusId) {
+
+        Assert.notNull(statusId, ResponseEnum.THE_ID_CANNOT_BE_EMPTY.getMessage());
+
+        return requestMapper.countRequestByStatusId(statusId);
+    }
+
+    @Override
     public PageVO<RequestVO> findRequest(RequestFilterDTO requestFilterDTO) {
 
         PageVO<RequestVO> pageVO = new PageVO<>();
@@ -219,17 +270,18 @@ public class RequestServiceImpl extends BaseServiceImpl<Request, RequestVO, Requ
     public RequestVO objectConversion(Request request) {
 
         RequestVO requestVO = super.objectConversion(request);
+        if (ObjectUtil.isNotNull(requestVO)) {
+            requestVO.setProcess(processService.findOne(request.getProcessId()));
+            requestVO.setStatus(processStatusService.findOne(request.getStatusId()));
+            List<RequestRelation> requestRelationList = requestRelationService.findRequestRelationByRequestId(request.getId());
+            if (CollectionUtil.isNotEmpty(requestRelationList)) {
+                Set<Long> ids = requestRelationList.stream()
+                        .filter(a -> ObjectUtil.notEqual(NumberConstant.ZERO.longValue(), a.getRequestId()))
+                        .map(RequestRelation::getParentId).collect(Collectors.toSet());
 
-        requestVO.setProcess(processService.findOne(request.getProcessId()));
-        requestVO.setStatus(processStatusService.findOne(request.getStatusId()));
-        List<RequestRelation> requestRelationList = requestRelationService.findRequestRelationByRequestId(request.getId());
-        if (CollectionUtil.isNotEmpty(requestRelationList)) {
-            Set<Long> ids = requestRelationList.stream()
-                    .filter(a -> ObjectUtil.notEqual(NumberConstant.ZERO.longValue(), a.getRequestId()))
-                    .map(RequestRelation::getParentId).collect(Collectors.toSet());
-
-            List<Request> requestList = requestMapper.findRequestByIds(ids);
-            requestVO.setParent(this.objectConversion(requestList));
+                List<Request> requestList = requestMapper.findRequestByIds(ids);
+                requestVO.setParent(this.objectConversion(requestList));
+            }
         }
 
         return requestVO;

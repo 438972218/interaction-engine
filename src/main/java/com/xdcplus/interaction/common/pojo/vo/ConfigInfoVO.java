@@ -50,6 +50,12 @@ public class ConfigInfoVO implements Serializable {
         private static final long serialVersionUID = -3093160118142424953L;
 
         /**
+         * 用户去向
+         */
+        @ApiModelProperty(value = "用户去向")
+        private Long userTo;
+
+        /**
          * 节点名
          */
         @ApiModelProperty(value = "节点名")

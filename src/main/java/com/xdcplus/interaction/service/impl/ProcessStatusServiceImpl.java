@@ -177,4 +177,14 @@ public class ProcessStatusServiceImpl extends BaseServiceImpl<ProcessStatus, Pro
 
         return this.objectConversion(processStatus);
     }
+
+    @Override
+    public Boolean validationExists(String name) {
+
+        Assert.notBlank(name, ResponseEnum.THE_NAME_CANNOT_BE_EMPTY.getMessage());
+
+        return ObjectUtil.isNotNull(processStatusMapper.findProcessStatusByName(name))
+                ? Boolean.TRUE : Boolean.FALSE;
+
+    }
 }

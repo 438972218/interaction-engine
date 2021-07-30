@@ -12,7 +12,7 @@
 
     <groupId>com.xdcplus</groupId>
     <artifactId>interaction-engine</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
 
     <name>interaction-engine</name>
     <description>流程交互引擎</description>

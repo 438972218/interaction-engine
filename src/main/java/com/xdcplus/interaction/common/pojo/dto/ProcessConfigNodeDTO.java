@@ -24,6 +24,12 @@ public class ProcessConfigNodeDTO implements Serializable {
     private static final long serialVersionUID = 2482731485622288714L;
 
     /**
+     * 用户去向ID
+     */
+    @ApiModelProperty(value = "用户去向ID")
+    private Long userTo;
+
+    /**
      * 节点名
      */
     @NotBlank(message = "节点名 不能为空")
@@ -78,9 +84,9 @@ public class ProcessConfigNodeDTO implements Serializable {
     public Long timeoutAction;
 
     /**
-     *  用户ID
+     *  用户去向标识
      */
-    @ApiModelProperty("用户ID")
+    @ApiModelProperty("用户去向标识")
     private Long toUserId;
 
     /**

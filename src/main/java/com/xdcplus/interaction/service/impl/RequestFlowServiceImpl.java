@@ -9,8 +9,6 @@ import cn.hutool.core.util.ObjectUtil;
 import com.xdcplus.interaction.common.enums.ResponseEnum;
 import com.xdcplus.interaction.common.exception.InteractionEngineException;
 import com.xdcplus.mp.service.impl.BaseServiceImpl;
-import com.xdcplus.mp.utils.AuthUtils;
-import com.xdcplus.tool.constants.AuthConstant;
 import com.xdcplus.tool.constants.NumberConstant;
 import com.xdcplus.interaction.common.pojo.bo.RequestFlowBO;
 import com.xdcplus.interaction.common.pojo.dto.ProcessTransforDTO;
@@ -30,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * 流转意见表 服务实现类
@@ -83,13 +82,18 @@ public class RequestFlowServiceImpl extends BaseServiceImpl<RequestFlowBO, Reque
 
     @Override
     @Transactional(rollbackFor = RuntimeException.class)
-    public void startTransfor(Long requestId) {
+    public void startTransfor(Long requestId, ProcessTransforDTO processTransforDTO) {
 
         RequestVO requestVO = requestService.findOne(requestId);
         Assert.notNull(requestVO, ResponseEnum.THE_REQUEST_DOES_NOT_EXIST_OR_HAS_BEEN_DELETED.getMessage());
 
         ProcessTransforParam processTransforParam = new ProcessTransforParam();
-        processTransforParam.setFlowOption(NumberConstant.THREE);
+        if (ObjectUtil.isNotNull(processTransforDTO)) {
+            BeanUtil.copyProperties(processTransforDTO, processTransforParam);
+        }else {
+            processTransforParam.setFlowOption(NumberConstant.THREE);
+        }
+
         processTransforParam.setRequest(requestVO);
 
         processTransforFactory.transfor(processTransforParam);
@@ -122,11 +126,6 @@ public class RequestFlowServiceImpl extends BaseServiceImpl<RequestFlowBO, Reque
 
         RequestFlow requestFlow = BeanUtil.copyProperties(requestFlowDTO, RequestFlow.class);
         requestFlow.setCreatedTime(DateUtil.current());
-        try {
-            requestFlow.setCreatedUser(AuthUtils.getCurrentUser());
-        } catch (Exception e) {
-            requestFlow.setCreatedUser(AuthConstant.ADMINISTRATOR);
-        }
 
         requestFlow.setBeginTime(requestFlowDTO.getBeginTime());
 
@@ -153,12 +152,7 @@ public class RequestFlowServiceImpl extends BaseServiceImpl<RequestFlowBO, Reque
 
         requestFlow.setFlowOptionValue(requestFlowDTO.getFlowOptionValue());
         requestFlow.setEndTime(requestFlowDTO.getEndTime());
-
-        try {
-            requestFlow.setUpdatedUser(AuthUtils.getCurrentUser());
-        } catch (Exception e) {
-            requestFlow.setUpdatedUser(AuthConstant.ADMINISTRATOR);
-        }
+        requestFlow.setUpdatedUser(requestFlowDTO.getUpdatedUser());
         requestFlow.setToUserId(requestFlowDTO.getToUserId());
         requestFlow.setUpdatedTime(DateUtil.current());
         requestFlow.setDescription(requestFlowDTO.getDescription());
@@ -199,22 +193,35 @@ public class RequestFlowServiceImpl extends BaseServiceImpl<RequestFlowBO, Reque
     }
 
     @Override
+    public List<RequestFlowVO> findRequestFlowByRoleIdsOrUserIds(Set<Long> roleIds, Long userId) {
+
+        if (CollectionUtil.isEmpty(roleIds) && Validator.isEmpty(userId)) {
+            throw new InteractionEngineException(ResponseEnum.PARAMETER_CANNOT_BE_EMPTY);
+        }
+
+        List<RequestFlowBO> requestFlowBOList = requestFlowMapper.findRequestFlowByRoleIdsOrUserIds(roleIds, userId);
+
+        return this.objectConversion(requestFlowBOList);
+    }
+
+    @Override
     public RequestFlowVO objectConversion(RequestFlowBO requestFlowBO) {
 
         RequestFlowVO requestFlowVO = super.objectConversion(requestFlowBO);
 
-        Request request = requestFlowBO.getRequest();
-        ProcessStatus lastStatus = requestFlowBO.getFromStatus();
-        ProcessStatus nextStatus = requestFlowBO.getToStatus();
-        FlowOption flowOption = requestFlowBO.getFlowOption();
-        Process process = requestFlowBO.getProcess();
+        if (ObjectUtil.isNotNull(requestFlowBO)) {
+            Request request = requestFlowBO.getRequest();
+            ProcessStatus lastStatus = requestFlowBO.getFromStatus();
+            ProcessStatus nextStatus = requestFlowBO.getToStatus();
+            FlowOption flowOption = requestFlowBO.getFlowOption();
+            Process process = requestFlowBO.getProcess();
 
-        Optional.ofNullable(request).ifPresent(r -> requestFlowVO.setRequest(requestService.objectConversion(r)));
-        Optional.ofNullable(lastStatus).ifPresent(r -> requestFlowVO.setFromStatus(processStatusService.objectConversion(r)));
-        Optional.ofNullable(nextStatus).ifPresent(r -> requestFlowVO.setToStatus(processStatusService.objectConversion(r)));
-        Optional.ofNullable(flowOption).ifPresent(r -> requestFlowVO.setFlowOption(flowOptionService.objectConversion(r)));
-        Optional.ofNullable(process).ifPresent(r -> requestFlowVO.setProcess(processService.objectConversion(r)));
-
+            Optional.ofNullable(request).ifPresent(r -> requestFlowVO.setRequest(requestService.objectConversion(r)));
+            Optional.ofNullable(lastStatus).ifPresent(r -> requestFlowVO.setFromStatus(processStatusService.objectConversion(r)));
+            Optional.ofNullable(nextStatus).ifPresent(r -> requestFlowVO.setToStatus(processStatusService.objectConversion(r)));
+            Optional.ofNullable(flowOption).ifPresent(r -> requestFlowVO.setFlowOption(flowOptionService.objectConversion(r)));
+            Optional.ofNullable(process).ifPresent(r -> requestFlowVO.setProcess(processService.objectConversion(r)));
+        }
         return requestFlowVO;
     }
 

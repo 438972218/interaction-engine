@@ -36,16 +36,16 @@ class RequestFlowServiceTest extends InteractionEngineApplicationTests {
     void processTransforAgree() {
 
         ProcessTransforDTO processTransforDTO = new ProcessTransforDTO();
-        processTransforDTO.setToUserId(1L);
         processTransforDTO.setFlowOption(1);
-        processTransforDTO.setRequestId(1406905414016708609L);
+        processTransforDTO.setRequestId(1412984051426521089L);
+        processTransforDTO.setUserId(20L);
 
         FlowCondition flowCondition = new FlowCondition();
-        flowCondition.setAge(11);
+        flowCondition.setRequestRelationRequestStatusId(2);
 
         ProcessTransforDTO.Agree agree = new ProcessTransforDTO.Agree();
         agree.setFlowConditions(flowCondition);
-        agree.setRoleIds(CollectionUtil.newArrayList(2L));
+        agree.setRoleIds(CollectionUtil.newArrayList(1L));
 
         processTransforDTO.setAgree(agree);
 
@@ -56,6 +56,7 @@ class RequestFlowServiceTest extends InteractionEngineApplicationTests {
     @Data
     private static class  FlowCondition {
         private Integer age;
+        private Integer requestRelationRequestStatusId;
     }
 
 
@@ -66,13 +67,13 @@ class RequestFlowServiceTest extends InteractionEngineApplicationTests {
     void processTransforSendBack() {
 
         ProcessTransforDTO processTransforDTO = new ProcessTransforDTO();
-        processTransforDTO.setToUserId(10L);
         processTransforDTO.setFlowOption(2);
         processTransforDTO.setRequestId(1402077442730606594L);
         processTransforDTO.setDescription("退回");
 
         ProcessTransforDTO.SendBack sendBack = new ProcessTransforDTO.SendBack();
         sendBack.setToStatusId(100L);
+        sendBack.setToUserId(10L);
 
         processTransforDTO.setSendBack(sendBack);
 
@@ -88,10 +89,13 @@ class RequestFlowServiceTest extends InteractionEngineApplicationTests {
 
 
         ProcessTransforDTO processTransforDTO = new ProcessTransforDTO();
-        processTransforDTO.setToUserId(30L);
         processTransforDTO.setFlowOption(6);
         processTransforDTO.setRequestId(1402077442730606594L);
         processTransforDTO.setDescription("前加签");
+
+        ProcessTransforDTO.AdditionalSign additionalSign = new ProcessTransforDTO.AdditionalSign();
+        additionalSign.setToUserIds(CollectionUtil.newArrayList(30L));
+        processTransforDTO.setAdditional(additionalSign);
 
         requestFlowService.processTransfor(processTransforDTO);
 
@@ -106,10 +110,14 @@ class RequestFlowServiceTest extends InteractionEngineApplicationTests {
     void processTransforAfterSignature() {
 
         ProcessTransforDTO processTransforDTO = new ProcessTransforDTO();
-        processTransforDTO.setToUserId(30L);
         processTransforDTO.setFlowOption(5);
         processTransforDTO.setRequestId(1402077442730606594L);
         processTransforDTO.setDescription("后加签");
+
+        ProcessTransforDTO.AdditionalSign additionalSign = new ProcessTransforDTO.AdditionalSign();
+        additionalSign.setToUserIds(CollectionUtil.newArrayList(30L));
+        processTransforDTO.setAdditional(additionalSign);
+
 
         requestFlowService.processTransfor(processTransforDTO);
 
@@ -123,10 +131,10 @@ class RequestFlowServiceTest extends InteractionEngineApplicationTests {
     void processTransforCancel() {
 
         ProcessTransforDTO processTransforDTO = new ProcessTransforDTO();
-        processTransforDTO.setToUserId(1L);
         processTransforDTO.setFlowOption(4);
         processTransforDTO.setRequestId(1403235981025071106L);
         processTransforDTO.setDescription("取消");
+
 
         requestFlowService.processTransfor(processTransforDTO);
 
@@ -140,9 +148,8 @@ class RequestFlowServiceTest extends InteractionEngineApplicationTests {
     void processTransforSubmit() {
 
         ProcessTransforDTO processTransforDTO = new ProcessTransforDTO();
-        processTransforDTO.setToUserId(1L);
         processTransforDTO.setFlowOption(3);
-        processTransforDTO.setRequestId(1403234002928394241L);
+        processTransforDTO.setRequestId(1412984051426521089L);
         processTransforDTO.setDescription("提交");
 
         requestFlowService.processTransfor(processTransforDTO);

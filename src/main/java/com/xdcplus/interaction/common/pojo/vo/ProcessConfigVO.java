@@ -1,5 +1,7 @@
 package com.xdcplus.interaction.common.pojo.vo;
 
+import cn.hutool.core.lang.Validator;
+import com.xdcplus.tool.constants.NumberConstant;
 import com.xdcplus.tool.pojo.bo.BaseBO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -20,6 +22,12 @@ import java.io.Serializable;
 public class ProcessConfigVO extends BaseBO implements Serializable {
 
     private static final long serialVersionUID = 8736687621031018695L;
+
+    /**
+     * 用户去向
+     */
+    @ApiModelProperty(value = "用户去向")
+    private Long userTo;
 
     /**
      * 用户ID
@@ -69,11 +77,16 @@ public class ProcessConfigVO extends BaseBO implements Serializable {
     @ApiModelProperty("版本号")
     private String version;
 
+    /**
+     * 节点-表单数量
+     */
+    @ApiModelProperty("节点-表单数量")
+    private Integer requestNumber;
 
-
-
-
-
+    public Integer getRequestNumber() {
+        return Validator.isNull(requestNumber)
+                ? NumberConstant.ZERO : requestNumber;
+    }
 
 
 

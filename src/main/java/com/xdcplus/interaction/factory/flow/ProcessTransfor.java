@@ -1,8 +1,5 @@
 package com.xdcplus.interaction.factory.flow;
 
-import cn.hutool.core.lang.Validator;
-import com.xdcplus.tool.constants.NumberConstant;
-
 /**
  *  流转转移过程
  * @author Rong.Jia
@@ -26,14 +23,7 @@ public interface ProcessTransfor {
         return Boolean.FALSE;
     }
 
-    /**
-     * 是否执行条件
-     * @param qualifierId  流程规则ID
-     * @return {@link Boolean}
-     */
-    default Boolean isExecutionCondition(Long qualifierId) {
-        return Validator.equal(NumberConstant.A_NEGATIVE.longValue(), qualifierId);
-    }
+
 
 
 

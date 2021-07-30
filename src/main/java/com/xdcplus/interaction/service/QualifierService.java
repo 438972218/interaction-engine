@@ -63,11 +63,11 @@ public interface QualifierService extends BaseService<Qualifier, QualifierVO, Qu
     Long getQualifier(QualifierDTO qualifierDTO);
 
 
-
-
-
-
-
-
-
+    /**
+     * 验证流程规则信息是否存在
+     *
+     * @param name 名字
+     * @return {@link Boolean} 是否存在
+     */
+    Boolean validationExists(String name);
 }

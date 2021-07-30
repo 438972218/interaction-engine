@@ -49,7 +49,9 @@ public class SendBackProcessTransfor extends BaseProcessTransfor {
         Set<Long> fromStatusIds = requestFlowVOList.stream().map(a -> a.getFromStatus().getId())
                 .collect(Collectors.toSet());
 
-        if (CollectionUtil.isEmpty(fromStatusIds)) fromStatusIds = CollectionUtil.newHashSet();
+        if (CollectionUtil.isEmpty(fromStatusIds)) {
+            fromStatusIds = CollectionUtil.newHashSet();
+        }
         fromStatusIds.addAll(requestFlowVOList.stream().map(a -> a.getToStatus().getId()).collect(Collectors.toSet()));
 
         if (!fromStatusIds.contains(toStatusId)) {
@@ -77,7 +79,8 @@ public class SendBackProcessTransfor extends BaseProcessTransfor {
                 .flowOptionValue(NumberConstant.A_NEGATIVE)
                 .fromStatusId(requestVO.getStatus().getId())
                 .toStatusId(toStatusId)
-                .toUserId(processTransforParam.getToUserId())
+                .configVersion(requestVO.getConfigVersion())
+                .toUserId(processTransforParam.getSendBack().getToUserId())
                 .fromUserId(userId)
                 .build();
 

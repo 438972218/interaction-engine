@@ -40,6 +40,18 @@ public interface OddRuleMapper extends IBaseMapper<OddRule> {
      */
     List<OddRule> findOddRule(OddRuleQuery query);
 
+    /**
+     * 查询名称查询规则信息
+     *
+     * @param name 名称
+     * @return {@link OddRule} 规则信息
+     */
+    OddRule findOddRuleByName(@Param("name") String name);
+
+
+
+
+
 
 
 

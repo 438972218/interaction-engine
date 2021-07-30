@@ -22,16 +22,6 @@ public interface DictionaryMapper extends IBaseMapper<Dictionary> {
     int deleteByPrimaryKey(Long id);
 
     /**
-     *  新增字典
-     * @param dictionary 字典信息
-     * @date 2019/12/05 08:57:22
-     * @author Rong.Jia
-     * @return 0：失败。1：成功
-     */
-    @Override
-    int insert(Dictionary dictionary);
-
-    /**
      *  根据主键id 查询字典
      * @param id 主键id
      * @date 2019/12/05 08:57:22

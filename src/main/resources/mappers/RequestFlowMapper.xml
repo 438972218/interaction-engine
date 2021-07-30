@@ -52,7 +52,7 @@
             <result column="process_id" property="processId" />
             <result column="title" property="title" />
             <result column="status_id" property="statusId" />
-             <result column="rule_id" property="ruleId" />
+            <result column="rule_id" property="ruleId" />
             <result column="config_version"  property="configVersion"/>
             <result column="created_user" property="createdUser" />
             <result column="updated_user" property="updatedUser" />
@@ -214,6 +214,27 @@
         <where>
             flow.request_id = #{requestId,jdbcType=BIGINT}
             and flow.flow_option_value = #{flowOption,jdbcType=INTEGER}
+        </where>
+    </select>
+    <select id="findRequestFlowByRoleIdsOrUserIds" resultMap="RequestFlowResultMap">
+        SELECT
+            <include refid="Request_Flow_Column_List"><property name="alias" value="flow"/></include>,
+            <include refid="Request_Column_List"><property name="alias" value="req"/></include>,
+            <include refid="Flow_Option_Column_List"><property name="alias" value="fo"/></include>
+        FROM
+            xdc_t_request_flow AS flow
+            LEFT JOIN xdc_t_request AS req ON flow.request_id = req.id
+            LEFT JOIN xdc_t_flow_option AS fo ON flow.flow_option_value = fo.value
+        <where>
+            <if test="roleIds != null and roleIds.size() != 0">
+                and flow.to_role_id in
+                <foreach collection="roleIds" index="index" close=")" item="item" open="(" separator=",">
+                    #{item,jdbcType=BIGINT}
+                </foreach>
+            </if>
+            <if test="userId != null">
+                or flow.to_user_id = #{userId,jdbcType=BIGINT}
+            </if>
         </where>
     </select>
 

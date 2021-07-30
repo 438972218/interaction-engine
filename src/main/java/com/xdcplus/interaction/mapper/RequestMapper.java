@@ -1,6 +1,8 @@
 package com.xdcplus.interaction.mapper;
 
 
+import com.xdcplus.interaction.common.pojo.dto.HandleMattersFilterDTO;
+import com.xdcplus.interaction.common.pojo.query.HandleMattersQuery;
 import com.xdcplus.mp.mapper.IBaseMapper;
 import com.xdcplus.interaction.common.pojo.entity.Request;
 import com.xdcplus.interaction.common.pojo.query.RequestQuery;
@@ -74,6 +76,33 @@ public interface RequestMapper extends IBaseMapper<Request> {
      */
     void updateProcessIdAndVersionById(@Param("requestId") Long requestId,
                                        @Param("processId") Long processId, @Param("version") String version);
+
+    /**
+     * 根据创建人查询表单信息
+     *
+     * @param createdUser 创建用户
+     * @return {@link List<Request>} 表单信息
+     */
+    List<Request> findRequestByCreatedUser(@Param("createdUser") String createdUser);
+
+    /**
+     * 表单处理事项查询
+     *
+     * @param handleMattersQuery 事项查询对象
+     * @return {@link List<Request>} 表单信息
+     */
+    List<Request> handleMatters(HandleMattersQuery handleMattersQuery);
+
+    /**
+     * 根据状态ID标识 计算表单个数
+     *
+     * @param statusId 状态标识
+     * @return {@link Integer} 表单个数
+     */
+    Integer countRequestByStatusId(@Param("statusId") Long statusId);
+
+
+
 
 
 

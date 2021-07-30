@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * 过程配置BO
@@ -23,6 +24,11 @@ public class ProcessConfigBO extends BaseBO implements Serializable {
      * 用户ID
      */
     private Long toUserId;
+
+    /**
+     * 用户去向
+     */
+    private Long userTo;
 
     /**
      * 流程明细表ID
@@ -78,7 +84,6 @@ public class ProcessConfigBO extends BaseBO implements Serializable {
      * 流程规则
      */
     private Qualifier qualifier;
-
 
 
 

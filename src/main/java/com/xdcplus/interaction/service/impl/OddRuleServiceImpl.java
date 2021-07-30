@@ -59,10 +59,9 @@ public class OddRuleServiceImpl extends BaseServiceImpl<OddRule, OddRuleVO, OddR
     public Boolean saveOddRule(OddRuleDTO oddRuleDTO) {
 
         OddRule oddRule = oddRuleMapper.findOddRuleByPrefix(oddRuleDTO.getPrefix());
-        if (ObjectUtil.isNotNull(oddRule)) {
-            log.error("saveOddRule() The order number rule already exists");
-            throw new InteractionEngineException(ResponseEnum.THE_ORDER_NUMBER_RULE_ALREADY_EXISTS);
-        }
+        Assert.isNull(oddRule, ResponseEnum.THE_ORDER_NUMBER_RULE_ALREADY_EXISTS.getMessage());
+        oddRule = oddRuleMapper.findOddRuleByName(oddRuleDTO.getName());
+        Assert.isNull(oddRule, ResponseEnum.THE_ORDER_NUMBER_RULE_ALREADY_EXISTS.getMessage());
 
         oddRule = new OddRule();
         BeanUtil.copyProperties(oddRuleDTO, oddRule);
@@ -76,17 +75,17 @@ public class OddRuleServiceImpl extends BaseServiceImpl<OddRule, OddRuleVO, OddR
     public Boolean updateOddRule(OddRuleDTO oddRuleDTO) {
 
         OddRule oddRule = this.getById(oddRuleDTO.getId());
-
-        if (ObjectUtil.isNull(oddRule)) {
-            log.error("updateOddRule() The order number rule does not exist or has been deleted");
-            throw new InteractionEngineException(ResponseEnum.THE_ORDER_NUMBER_RULE_DOES_NOT_EXIST_OR_HAS_BEEN_DELETED);
-        }
+        Assert.notNull(oddRule,
+                ResponseEnum.THE_ORDER_NUMBER_RULE_DOES_NOT_EXIST_OR_HAS_BEEN_DELETED.getMessage());
 
         if (!StrUtil.equals(oddRule.getPrefix(), oddRuleDTO.getPrefix())) {
-            if (ObjectUtil.isNotNull(oddRuleMapper.findOddRuleByPrefix(oddRuleDTO.getPrefix()))) {
-                log.error("updateOddRule() The order number rule already exists");
-                throw new InteractionEngineException(ResponseEnum.THE_ORDER_NUMBER_RULE_ALREADY_EXISTS);
-            }
+            Assert.isNull(oddRuleMapper.findOddRuleByPrefix(oddRuleDTO.getPrefix()),
+                    ResponseEnum.THE_ORDER_NUMBER_RULE_ALREADY_EXISTS.getMessage());
+        }
+
+        if (!StrUtil.equals(oddRule.getName(), oddRuleDTO.getName())) {
+            Assert.isNull(oddRuleMapper.findOddRuleByName(oddRuleDTO.getName()),
+                    ResponseEnum.THE_ORDER_NUMBER_RULE_ALREADY_EXISTS.getMessage());
         }
 
         oddRule.setName(oddRuleDTO.getName());
@@ -138,6 +137,15 @@ public class OddRuleServiceImpl extends BaseServiceImpl<OddRule, OddRuleVO, OddR
         Assert.notNull(ruleId, ResponseEnum.THE_ID_CANNOT_BE_EMPTY.getMessage());
 
         return this.objectConversion(this.getById(ruleId));
+    }
+
+    @Override
+    public Boolean validationRuleExists(String nameOrPrefix) {
+
+        return ObjectUtil.isNotNull(oddRuleMapper.findOddRuleByName(nameOrPrefix))
+                || ObjectUtil.isNotNull(oddRuleMapper.findOddRuleByPrefix(nameOrPrefix))
+                ? Boolean.TRUE : Boolean.FALSE;
+
     }
 
 

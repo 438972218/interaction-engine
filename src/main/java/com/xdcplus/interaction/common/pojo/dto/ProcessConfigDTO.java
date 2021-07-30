@@ -28,13 +28,6 @@ public class ProcessConfigDTO implements Serializable {
     private Long processId;
 
     /**
-     * 版本
-     */
-    @ApiModelProperty(value = "流程版本", required = true)
-    @NotBlank(message = "流程版本 不能为空")
-    private String version;
-
-    /**
      * 节点信息
      */
     @NotNull(message = "节点信息 不能为空")

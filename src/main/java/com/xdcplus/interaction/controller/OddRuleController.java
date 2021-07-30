@@ -1,7 +1,6 @@
 package com.xdcplus.interaction.controller;
 
 import com.xdcplus.interaction.common.pojo.vo.ResponseVO;
-import com.xdcplus.mp.controller.AbstractController;
 import com.xdcplus.tool.pojo.vo.PageVO;
 import com.xdcplus.interaction.common.pojo.dto.OddRuleDTO;
 import com.xdcplus.interaction.common.pojo.dto.OddRuleFilterDTO;
@@ -18,6 +17,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Validation;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -31,7 +31,7 @@ import javax.validation.constraints.NotNull;
 @Validated
 @RequestMapping("/oddRule")
 @Api(tags = "单号规则管理")
-public class OddRuleController extends AbstractController {
+public class OddRuleController {
 
     @Autowired
     private OddRuleService oddRuleService;
@@ -42,7 +42,6 @@ public class OddRuleController extends AbstractController {
 
         log.info("saveOddRule {}", oddRuleDTO.toString());
 
-        oddRuleDTO.setCreatedUser(getAccount());
         oddRuleService.saveOddRule(oddRuleDTO);
 
         return ResponseVO.success();
@@ -55,7 +54,6 @@ public class OddRuleController extends AbstractController {
 
         log.info("updateOddRule {}", oddRuleDTO.toString());
 
-        oddRuleDTO.setUpdatedUser(getAccount());
         oddRuleService.updateOddRule(oddRuleDTO);
 
         return ResponseVO.success();
@@ -88,6 +86,39 @@ public class OddRuleController extends AbstractController {
         return ResponseVO.success(oddRuleService.findOddRule(oddRuleFilterDTO));
 
     }
+
+    @ApiOperation("查询单个单号规则")
+    @GetMapping(value = "/{ruleId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "path", name = "ruleId", dataType = "Long", value = "规则ID", required = true),
+    })
+    public ResponseVO<OddRuleVO> findOddRuleById(@PathVariable("ruleId")
+                                                     @NotNull(message = "规则ID 不能为空")
+                                                             Long ruleId) {
+
+        log.info("findOddRuleById {}", ruleId);
+
+        return ResponseVO.success(oddRuleService.findOne(ruleId));
+
+    }
+
+    @ApiOperation("验证规则是否存在")
+    @GetMapping(value = "/existRule/{nameOrPrefix}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "path", name = "nameOrPrefix", dataType = "String", value = "规则名或者规则前缀", required = true),
+    })
+    public ResponseVO<Boolean> validationRuleExists(@PathVariable("nameOrPrefix")
+                                                 @NotBlank(message = "规则名或者规则前缀 不能为空")
+                                                         String nameOrPrefix) {
+
+        log.info("validationRuleExists {}", nameOrPrefix);
+
+        return ResponseVO.success(oddRuleService.validationRuleExists(nameOrPrefix));
+
+    }
+
+
+
 
 
 

@@ -4,7 +4,7 @@ logging:
 spring:
 
   profiles:
-    active: dev
+    active: pro
 
   servlet:
     multipart:
@@ -22,9 +22,9 @@ spring:
     driver-class-name: com.mysql.jdbc.Driver
     sql-script-encoding: UTF-8
     initialization-mode: always
-#    schema:
-#      - classpath:sql/flowable.sql
-#      - classpath:sql/dictionary.sql
+    schema:
+      - classpath:sql/flowable.sql
+      - classpath:sql/dictionary.sql
 
     druid:
       # 定义初始连接数
@@ -148,7 +148,7 @@ swagger:
   title: 流程交互引擎
   description: 流程交互引擎接口文档系统
   base-packages: com.xdcplus.interaction.controller
-  version: 1.0.0
+  version: 2.0.0
   license: Apache License, Version 2.0
   license-url: https://www.apache.org/licenses/LICENSE-2.0.html
   terms-of-service-url: https://www.apache.org/licenses/LICENSE-2.0.html

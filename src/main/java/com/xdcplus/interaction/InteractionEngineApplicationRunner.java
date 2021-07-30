@@ -1,5 +1,6 @@
 package com.xdcplus.interaction;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
  * @date 2021/05/24 09:24
  * @author Rong.Jia
  */
+@Slf4j
 @Component
 public class InteractionEngineApplicationRunner implements ApplicationRunner {
 
@@ -19,6 +21,8 @@ public class InteractionEngineApplicationRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
+
+        log.info("InteractionEngineApplication stater .....");
 
     }
 }

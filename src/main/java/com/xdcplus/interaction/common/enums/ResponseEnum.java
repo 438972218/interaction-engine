@@ -26,6 +26,8 @@ public enum ResponseEnum {
     // 1000：公共
     THE_ID_CANNOT_BE_EMPTY(1004, "id 不能为空"),
     DATA_QUOTE(1006, "数据被引用，无法执行操作"),
+    THE_NAME_CANNOT_BE_EMPTY(1005, "名称不能为空"),
+    PARAMETER_CANNOT_BE_EMPTY(1007, "参数不能为空"),
 
     //  5200：数据字典
     DATA_DICTIONARY_LIST_NULL(5201,"数据字典列表为空"),
@@ -65,6 +67,10 @@ public enum ResponseEnum {
     THE_PROCESS_CONFIGURATION_TEMPLATE_DOES_NOT_EXIST_OR_HAS_BEEN_DELETED(5629, "流程配置模板不存在或已删除"),
     MISSING_START_NODE(5630, "缺少开始节点"),
     MISSING_END_NODE(5630, "缺少结束节点"),
+    THE_UNSIGNED_FLOW_RECORD_WAS_NOT_OBTAINED_CORRECTLY(5631, "未正确获取非加签流转记录"),
+    PRE_SIGNING_IS_NOT_ALLOWED_DURING_PRE_SIGNING(5632, "前加签过程中不允许后加签"),
+
+
 
     // 5700： 表达式模块
     THE_EXPRESSION_DOES_NOT_EXIST_OR_HAS_BEEN_DELETED(5701, "表达式不存在, 或者已删除"),

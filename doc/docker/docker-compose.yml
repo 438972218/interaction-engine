@@ -9,13 +9,12 @@ services:
       SWAGGER_DISABLE: "false"
       MYSQL_HOST: localhost
       MYSQL_PORT: 3306
-      MYSQL_DATABASE: workflow
+      MYSQL_DATABASE: interaction_engine
       MYSQL_USERNAME: root
       MYSQL_PASSWORD: 123456
       REDIS_HOST: localhost
       REDIS_PORT: 6379
       REDIS_DATABASE: 0
-      FLOWABLE_SIGNATURE_WAIT: "false"
     ports:
       - 10001:8080
     expose:

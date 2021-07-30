@@ -24,5 +24,16 @@ public interface ProcessConfigNodeMapper extends IBaseMapper<ProcessConfigNode> 
     List<ProcessConfigNode> findConfigNodeByProcessIdAndVersion(@Param("processId") Long processId,
                                                                 @Param("version") String version);
 
+    /**
+     * 获取配置节点
+     *
+     * @param processId 流程ID
+     * @param mark      标识
+     * @param version   版本
+     * @return {@link ProcessConfigNode} 配置节点信息
+     */
+    ProcessConfigNode findConfigNodeByProcessIdAndVersionAndMark(@Param("processId") Long processId, @Param("mark") String mark, @Param("version") String version);
+
+
 
 }

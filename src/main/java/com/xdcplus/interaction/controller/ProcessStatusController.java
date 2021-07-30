@@ -1,8 +1,9 @@
 package com.xdcplus.interaction.controller;
 
 
+import com.xdcplus.interaction.common.pojo.entity.ProcessStatus;
+import com.xdcplus.interaction.common.pojo.vo.ProcessVO;
 import com.xdcplus.interaction.common.pojo.vo.ResponseVO;
-import com.xdcplus.mp.controller.AbstractController;
 import com.xdcplus.tool.pojo.vo.PageVO;
 import com.xdcplus.interaction.common.pojo.dto.ProcessStatusDTO;
 import com.xdcplus.interaction.common.pojo.dto.ProcessStatusFilterDTO;
@@ -19,6 +20,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Validation;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -30,9 +32,9 @@ import javax.validation.constraints.NotNull;
 @RestController
 @Validated
 @Slf4j
-@Api(tags = "流程状态 模块管理")
+@Api(tags = "流程状态模块管理")
 @RequestMapping("/processStatus")
-public class ProcessStatusController  extends AbstractController {
+public class ProcessStatusController {
 
     @Autowired
     private ProcessStatusService processStatusService;
@@ -43,7 +45,6 @@ public class ProcessStatusController  extends AbstractController {
 
         log.info("saveProcessStatus {}", processStatusDTO.toString());
 
-        processStatusDTO.setCreatedUser(getAccount());
         processStatusService.saveProcessStatus(processStatusDTO);
 
         return ResponseVO.success();
@@ -56,7 +57,6 @@ public class ProcessStatusController  extends AbstractController {
 
         log.info("updateProcessStatus {}", processStatusDTO.toString());
 
-        processStatusDTO.setUpdatedUser(getAccount());
         processStatusService.updateProcessStatus(processStatusDTO);
 
         return ResponseVO.success();
@@ -91,7 +91,35 @@ public class ProcessStatusController  extends AbstractController {
 
     }
 
+    @ApiOperation("查询单个流程状态信息")
+    @GetMapping(value = "/{processStatusId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "path", name = "processStatusId", dataType = "Long", value = "流程状态信息ID", required = true),
+    })
+    public ResponseVO<ProcessStatusVO> findProcessStatusById(@PathVariable("processStatusId")
+                                                 @NotNull(message = "流程状态信息ID 不能为空")
+                                                         Long processStatusId) {
 
+        log.info("findProcessStatusById {}", processStatusId);
+
+        return ResponseVO.success(processStatusService.findOne(processStatusId));
+
+    }
+
+    @ApiOperation("验证流程状态信息是否存在")
+    @GetMapping(value = "/existProcessStatus/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "path", name = "name", dataType = "String", value = "流程状态信息名称", required = true),
+    })
+    public ResponseVO<Boolean> validationExists(@PathVariable("name")
+                                                @NotBlank(message = "流程状态信息名称 不能为空")
+                                                        String name) {
+
+        log.info("validationExists {}", name);
+
+        return ResponseVO.success(processStatusService.validationExists(name));
+
+    }
 
 
 

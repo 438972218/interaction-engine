@@ -146,4 +146,13 @@ public class QualifierServiceImpl extends BaseServiceImpl<Qualifier, QualifierVO
 
         return qualifier.getId();
     }
+
+    @Override
+    public Boolean validationExists(String name) {
+
+        Assert.notBlank(name, ResponseEnum.THE_NAME_CANNOT_BE_EMPTY.getMessage());
+
+        return ObjectUtil.isNotNull(qualifierMapper.findQualifierByName(name))
+                ? Boolean.TRUE : Boolean.FALSE;
+    }
 }

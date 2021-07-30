@@ -2,7 +2,6 @@ package com.xdcplus.interaction.controller;
 
 
 import com.xdcplus.interaction.common.pojo.vo.ResponseVO;
-import com.xdcplus.mp.controller.AbstractController;
 import com.xdcplus.tool.pojo.vo.PageVO;
 import com.xdcplus.interaction.common.pojo.dto.ProcessDTO;
 import com.xdcplus.interaction.common.pojo.dto.ProcessFilterDTO;
@@ -19,6 +18,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Validation;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -32,7 +32,7 @@ import javax.validation.constraints.NotNull;
 @Validated
 @Slf4j
 @RequestMapping("/process")
-public class ProcessController extends AbstractController {
+public class ProcessController {
 
     @Autowired
     private ProcessService processService;
@@ -43,7 +43,6 @@ public class ProcessController extends AbstractController {
 
         log.info("saveProcess {}", processDTO.toString());
 
-        processDTO.setCreatedUser(getAccount());
         processService.saveProcess(processDTO);
 
         return ResponseVO.success();
@@ -56,7 +55,6 @@ public class ProcessController extends AbstractController {
 
         log.info("updateProcess {}", processDTO.toString());
 
-        processDTO.setUpdatedUser(getAccount());
         processService.updateProcess(processDTO);
 
         return ResponseVO.success();
@@ -79,7 +77,7 @@ public class ProcessController extends AbstractController {
 
     }
 
-    @ApiOperation("查询流程")
+    @ApiOperation("查询流程信息")
     @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseVO<PageVO<ProcessVO>> findProcess(ProcessFilterDTO processFilterDTO) {
 
@@ -91,9 +89,35 @@ public class ProcessController extends AbstractController {
 
     }
 
+    @ApiOperation("查询单个流程信息")
+    @GetMapping(value = "/{processId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "path", name = "processId", dataType = "Long", value = "流程信息ID", required = true),
+    })
+    public ResponseVO<ProcessVO> findProcessById(@PathVariable("processId")
+                                                             @NotNull(message = "流程信息ID 不能为空")
+                                                                     Long processId) {
 
+        log.info("findProcessById {}", processId);
 
+        return ResponseVO.success(processService.findOne(processId));
 
+    }
+
+    @ApiOperation("验证流程信息是否存在")
+    @GetMapping(value = "/existProcess/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "path", name = "name", dataType = "String", value = "流程信息名称", required = true),
+    })
+    public ResponseVO<Boolean> validationExists(@PathVariable("name")
+                                                    @NotBlank(message = "流程信息名称 不能为空")
+                                                            String name) {
+
+        log.info("validationExists {}", name);
+
+        return ResponseVO.success(processService.validationExists(name));
+
+    }
 
 
 

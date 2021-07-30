@@ -1,5 +1,6 @@
 package com.xdcplus.interaction.service;
 
+import com.xdcplus.interaction.common.pojo.dto.HandleMattersFilterDTO;
 import com.xdcplus.interaction.common.pojo.dto.RequestConfigDTO;
 import com.xdcplus.mp.service.BaseService;
 import com.xdcplus.tool.pojo.vo.PageVO;
@@ -78,6 +79,30 @@ public interface RequestService extends BaseService<Request, RequestVO, Request>
      * @param requestConfigDTO 修改参数
      */
     void updateProcessIdAndVersionById(RequestConfigDTO requestConfigDTO);
+
+    /**
+     * 验证表单信息是否存在
+     *
+     * @param title 名字
+     * @return {@link Boolean} 是否存在
+     */
+    Boolean validationExists(String title);
+
+    /**
+     * 表单办理事项
+     *
+     * @param handleMattersFilterDTO 事项参数
+     * @return {@link PageVO<RequestVO>} 表单信息
+     */
+    PageVO<RequestVO> handleMatters(HandleMattersFilterDTO handleMattersFilterDTO);
+
+    /**
+     * 根据状态ID标识 计算表单个数
+     *
+     * @param statusId 状态标识
+     * @return {@link Integer} 表单个数
+     */
+    Integer countRequestByStatusId(Long statusId);
 
 
 

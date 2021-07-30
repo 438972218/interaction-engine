@@ -54,7 +54,15 @@ public interface ProcessConfigNodeService extends BaseService<ProcessConfigNode,
      */
     List<ProcessConfigNode> findConfigNode(Long processId, @Nullable String version);
 
-
+    /**
+     * 获取配置节点
+     *
+     * @param processId 流程ID
+     * @param mark      标识
+     * @param version   版本
+     * @return {@link ProcessConfigNode} 配置节点信息
+     */
+    ProcessConfigNode findConfigNode(Long processId, String mark, String version);
 
 
 

@@ -42,18 +42,19 @@ public class ProcessConfigQuery implements Serializable {
     private Long toUserId;
 
     /**
-     * 规则条件ID
-     */
-    private Long qualifierId;
-
-    /**
      *  主键
      */
     private Set<Long> ids;
 
+    /**
+     * 是否归档
+     */
+    private Boolean whetherArchive;
 
-
-
+    /**
+     * 归档标识
+     */
+    private Long archiveId;
 
 
 

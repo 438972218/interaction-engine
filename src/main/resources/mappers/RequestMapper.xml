@@ -34,9 +34,6 @@
             <include refid="Base_Column_List"/>
         from xdc_t_request as r
         <where>
-            <if test="id != null and id != ''">
-                and r.id = #{id,jdbcType=BIGINT}
-            </if>
             <if test="title != null and title != ''">
                 and r.title = #{title,jdbcType=VARCHAR}
             </if>
@@ -51,6 +48,9 @@
                 <foreach collection="ids" close=")" index="index" item="item" open="(" separator=",">
                     #{item,jdbcType=BIGINT}
                 </foreach>
+            </if>
+            <if test="username != null and username != ''">
+                r.created_user = #{username,jdbcType=VARCHAR}
             </if>
         </where>
     </select>
@@ -84,8 +84,51 @@
         where id = #{id,jdbcType=BIGINT}
     </update>
     <update id="updateProcessIdAndVersionById">
-        update xdc_t_request set process_id = #{processId,jdbcType=BIGINT}, version = #{version,jdbcType=VARCHAR}
+        update xdc_t_request
+        set process_id = #{processId,jdbcType=BIGINT}, version = #{version,jdbcType=VARCHAR}
         where id = #{requestId,jdbcType=BIGINT}
     </update>
+    <select id="findRequestByCreatedUser" resultMap="BaseResultMap">
+        select
+            <include refid="Base_Column_List"/>
+        from xdc_t_request
+        where created_user = #{createdUser,jdbcType=VARCHAR}
+    </select>
+    <select id="handleMatters" resultMap="BaseResultMap">
+        select
+            <include refid="Base_Column_List"/>
+        from xdc_t_request
+        <where>
+            <if test="processId != null">
+                and process_id = #{processId,jdbcType=BIGINT}
+            </if>
+              <if test="statusId != null">
+                and status_id = #{statusId,jdbcType=BIGINT}
+            </if>
+            <if test="statusId != null">
+                and status_id = #{statusId,jdbcType=BIGINT}
+            </if>
+            <if test="startTime != null and endTime != null">
+                and created_time between #{startTime,jdbcType=BIGINT} and #{endTime,jdbcType=BIGINT}
+            </if>
+            <if test="createdUser != null and createdUser != ''">
+                and created_user = #{createdUser,jdbcType=VARCHAR}
+            </if>
+            <if test="requestIds != null and requestIds.size() != 0">
+                and id in
+                <foreach collection="requestIds" separator="," open="(" item="item" close=")" index="index">
+                    #{item,jdbcType=BIGINT}
+                </foreach>
+            </if>
+        </where>
+    </select>
+    <select id="countRequestByStatusId" resultType="java.lang.Integer">
+        SELECT
+            COUNT(req.id)
+        FROM
+            xdc_t_request as req
+        WHERE
+            req.status_id = #{statusId,jdbcType=BIGINT}
+    </select>
 
 </mapper>

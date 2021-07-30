@@ -21,12 +21,6 @@ public class RequestFilterDTO extends PageDTO implements Serializable {
     private static final long serialVersionUID = 4902882783377028458L;
 
     /**
-     * 表单ID
-     */
-    @ApiModelProperty(value = "表单ID")
-    private Long id;
-
-    /**
      *  流程ID
      */
     @ApiModelProperty(value = "流程ID")
@@ -49,5 +43,13 @@ public class RequestFilterDTO extends PageDTO implements Serializable {
      */
     @ApiModelProperty(value = "单号 可模糊查询")
     private String oddNumber;
+
+    /**
+     * 账号
+     */
+    @ApiModelProperty(value = "账号")
+    private String username;
+
+
 
 }

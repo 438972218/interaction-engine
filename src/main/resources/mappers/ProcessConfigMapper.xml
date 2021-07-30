@@ -8,8 +8,9 @@
         <result column="process_id" property="processId" />
         <result column="from_status_id" property="fromStatusId" />
         <result column="to_status_id" property="toStatusId" />
-         <result column="to_role_id" property="toRoleId" />
+        <result column="to_role_id" property="toRoleId" />
         <result column="to_user_id" property="toUserId" />
+        <result column="user_to" property="userTo"/>
         <result column="qualifier_id" property="qualifierId" />
         <result column="version" property="version"/>
         <result column="created_user" property="createdUser" />
@@ -26,8 +27,9 @@
         <result column="process_id" property="processId" />
         <result column="from_status_id" property="fromStatusId" />
         <result column="to_status_id" property="toStatusId" />
-         <result column="to_role_id" property="toRoleId" />
+        <result column="to_role_id" property="toRoleId" />
         <result column="to_user_id" property="toUserId" />
+        <result column="user_to" property="userTo"/>
         <result column="qualifier_id" property="qualifierId" />
         <result column="version" property="version"/>
         <result column="created_user" property="createdUser" />
@@ -78,17 +80,18 @@
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, process_id, from_status_id, to_status_id, to_role_id, to_user_id, qualifier_id,
+        id, process_id, from_status_id, to_status_id, to_role_id, to_user_id, user_to, qualifier_id,
         timeout_action, version, created_user, updated_user, created_time, updated_time, description
     </sql>
 
     <sql id="Process_Config_Column_List">
         ${alias}.id as id, ${alias}.process_id as process_id, ${alias}.from_status_id as from_status_id,
         ${alias}.to_status_id as to_status_id, ${alias}.to_role_id as to_role_id,
-        ${alias}.to_user_id as to_user_id, ${alias}.qualifier_id as qualifier_id, ${alias}.timeout_action as timeout_action,
-        ${alias}.version as version,${alias}.created_user as created_user, ${alias}.updated_user as updated_user,
-        ${alias}.created_time as created_time, ${alias}.updated_time as updated_time,
-        ${alias}.description as description
+        ${alias}.to_user_id as to_user_id, ${alias}.user_to as user_to,
+        ${alias}.qualifier_id as qualifier_id, ${alias}.timeout_action as timeout_action,
+        ${alias}.version as version,${alias}.created_user as created_user,
+        ${alias}.updated_user as updated_user, ${alias}.created_time as created_time,
+        ${alias}.updated_time as updated_time, ${alias}.description as description
     </sql>
 
     <sql id="Process_Column_List">
@@ -113,17 +116,16 @@
 
     <select id="findProcessConfig" resultMap="ProcessConfigResultMap">
         SELECT
-            <include refid="Process_Config_Column_List"><property name="alias" value="config"/></include>,
-            <include refid="Process_Column_List"><property name="alias" value="process"/></include>,
+           <include refid="Process_Config_Column_List"><property name="alias" value="config"/></include>,
+           <include refid="Process_Column_List"><property name="alias" value="process"/></include>,
            <include refid="Process_Status_Column_List"><property name="alias" value="ps1"/></include>,
-           <include refid="Process_Status_Column_List"><property name="alias" value="ps2"/></include>,
-           <include refid="Qualifier_Column_List"><property name="alias" value="qualifier"/></include>
+           <include refid="Process_Status_Column_List"><property name="alias" value="ps2"/></include>
         FROM
             xdc_t_process_config AS config
+            LEFT JOIN xdc_t_request AS req ON config.process_id = req.process_id
             LEFT JOIN xdc_t_process AS process ON config.process_id = process.id
             LEFT JOIN xdc_t_process_status AS ps1 ON config.from_status_id = ps1.id
             LEFT JOIN xdc_t_process_status AS ps2 ON config.to_status_id = ps2.id
-            LEFT JOIN xdc_t_qualifier AS qualifier ON config.qualifier_id = qualifier.id
         <where>
             <if test="processId != null">
                 and config.process_id = #{processId,jdbcType=BIGINT}
@@ -140,14 +142,14 @@
             <if test="toRoleId != null">
                 and config.to_role_id = #{toRoleId,jdbcType=BIGINT}
             </if>
-            <if test="qualifierId != null">
-                and config.qualifier_id = #{qualifierId,jdbcType=BIGINT}
-            </if>
             <if test="ids != null and ids.size() != 0">
                 and config.id in
                 <foreach collection="ids" index="index" close=")" item="item" open="(" separator=",">
                       #{item,jdbcType=BIGINT}
                 </foreach>
+            </if>
+            <if test="whetherArchive != null and whetherArchive">
+                and req.status_id != #{archiveId,jdbcType=BIGINT}
             </if>
         </where>
     </select>
@@ -158,8 +160,8 @@
         where process_id = #{processId,jdbcType=BIGINT}
     </select><select id="findConfigByRequestId" resultMap="ProcessConfigResultMap">
         SELECT
-            <include refid="Process_Config_Column_List"><property name="alias" value="config"/></include>,
-            <include refid="Process_Column_List"><property name="alias" value="process"/></include>,
+           <include refid="Process_Config_Column_List"><property name="alias" value="config"/></include>,
+           <include refid="Process_Column_List"><property name="alias" value="process"/></include>,
            <include refid="Process_Status_Column_List"><property name="alias" value="ps1"/></include>,
            <include refid="Process_Status_Column_List"><property name="alias" value="ps2"/></include>,
            <include refid="Qualifier_Column_List"><property name="alias" value="qualifier"/></include>
@@ -175,9 +177,9 @@
     </select>
     <select id="findConfigByProcessIdAndFromStatusId" resultMap="ProcessConfigResultMap">
          SELECT
-            <include refid="Process_Config_Column_List"><property name="alias" value="config"/></include>,
+           <include refid="Process_Config_Column_List"><property name="alias" value="config"/></include>,
            <include refid="Process_Status_Column_List"><property name="alias" value="ps1"/></include>,
-            <include refid="Process_Column_List"><property name="alias" value="process"/></include>,
+           <include refid="Process_Column_List"><property name="alias" value="process"/></include>,
            <include refid="Process_Status_Column_List"><property name="alias" value="ps2"/></include>,
            <include refid="Qualifier_Column_List"><property name="alias" value="qualifier"/></include>
         FROM
@@ -201,9 +203,9 @@
     </select>
     <select id="findConfigAssociatedByProcessId" resultMap="ProcessConfigResultMap">
         SELECT
-            <include refid="Process_Config_Column_List"><property name="alias" value="config"/></include>,
+           <include refid="Process_Config_Column_List"><property name="alias" value="config"/></include>,
            <include refid="Process_Status_Column_List"><property name="alias" value="ps1"/></include>,
-            <include refid="Process_Column_List"><property name="alias" value="process"/></include>,
+           <include refid="Process_Column_List"><property name="alias" value="process"/></include>,
            <include refid="Process_Status_Column_List"><property name="alias" value="ps2"/></include>,
            <include refid="Qualifier_Column_List"><property name="alias" value="qualifier"/></include>
         FROM
@@ -219,6 +221,15 @@
                 and config.version = #{version,jdbcType=VARCHAR}
             </if>
         </where>
+    </select>
+    <select id="findConfigVersionByProcessId" resultType="java.lang.String">
+        SELECT
+            config.version
+        FROM
+            xdc_t_process_config AS config
+        where process_id = #{processId,jdbcType=BIGINT}
+        GROUP BY
+            config.version
     </select>
 
 </mapper>

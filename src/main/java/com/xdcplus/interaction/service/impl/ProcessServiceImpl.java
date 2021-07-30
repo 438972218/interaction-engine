@@ -117,8 +117,7 @@ public class ProcessServiceImpl extends BaseServiceImpl<Process, ProcessVO, Proc
         PageVO<ProcessVO> pageVO = new PageVO<>();
 
         if (processFilterDTO.getCurrentPage() > NumberConstant.ZERO) {
-            PageableUtils.basicPage(processFilterDTO.getCurrentPage(), processFilterDTO.getPageSize(),
-                    processFilterDTO.getOrderType(), processFilterDTO.getOrderField());
+            PageableUtils.basicPage(processFilterDTO);
         }
 
         ProcessQuery processQuery = BeanUtil.copyProperties(processFilterDTO, ProcessQuery.class);
@@ -153,5 +152,14 @@ public class ProcessServiceImpl extends BaseServiceImpl<Process, ProcessVO, Proc
         }
 
         return process.getId();
+    }
+
+    @Override
+    public Boolean validationExists(String name) {
+
+        Assert.notBlank(name, ResponseEnum.THE_NAME_CANNOT_BE_EMPTY.getMessage());
+
+        return ObjectUtil.isNotNull(processMapper.findProcessByName(name))
+                ? Boolean.TRUE : Boolean.FALSE;
     }
 }

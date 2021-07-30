@@ -2,7 +2,7 @@ package com.xdcplus.interaction.common.factory.algorithm;
 
 import com.xdcplus.interaction.InteractionEngineApplicationTests;
 import com.xdcplus.interaction.common.pojo.entity.OddRule;
-import com.xdcplus.interaction.factory.algorithm.OddAlgorithmFactory;
+import com.xdcplus.interaction.factory.oddrule.OddAlgorithmFactory;
 import com.xdcplus.interaction.service.OddRuleService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

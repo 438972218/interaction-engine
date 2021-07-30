@@ -6,11 +6,11 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.xdcplus.interaction.InteractionEngineApplicationTests;
-import com.xdcplus.interaction.common.pojo.dto.ProcessConfigDTO;
-import com.xdcplus.interaction.common.pojo.dto.ProcessConfigLineDTO;
-import com.xdcplus.interaction.common.pojo.dto.ProcessConfigNodeDTO;
+import com.xdcplus.interaction.common.pojo.dto.*;
 import com.xdcplus.interaction.common.pojo.vo.ProcessConfigInfoVO;
 import com.xdcplus.interaction.common.pojo.vo.ProcessConfigVO;
+import com.xdcplus.interaction.common.utils.VersionUtils;
+import com.xdcplus.tool.pojo.vo.PageVO;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -48,8 +48,18 @@ class ProcessConfigServiceTest extends InteractionEngineApplicationTests {
 
         System.out.println(JSON.toJSONString(processConfigInfoVOList));
 
+    }
 
+    @Test
+    void findProcessConfigFilter() {
 
+        ProcessConfigFilterDTO processConfigFilterDTO = new ProcessConfigFilterDTO();
+        processConfigFilterDTO.setCurrentPage(1);
+        processConfigFilterDTO.setPageSize(20);
+
+        PageVO<ProcessConfigVO> pageVO = processConfigService.findProcessConfig(processConfigFilterDTO);
+
+        System.out.println(JSON.toJSONString(pageVO));
 
     }
 
@@ -63,7 +73,6 @@ class ProcessConfigServiceTest extends InteractionEngineApplicationTests {
 
         ProcessConfigDTO processConfigDTO = new ProcessConfigDTO();
         processConfigDTO.setProcessId(1408230069725970433L);
-        processConfigDTO.setVersion("V1.0.0");
 
         List<ProcessConfigNodeDTO> processConfigNodeDTOList = nodeLink.getNodeList().stream().map(a -> {
 
@@ -199,7 +208,15 @@ class ProcessConfigServiceTest extends InteractionEngineApplicationTests {
 
     }
 
+    @Test
+    void findConfigVersionByProcessId() {
 
+        List<String> version = processConfigService.findConfigVersionByProcessId(1412588961516351490L);
+        System.out.println(version.toString());
+
+        System.out.println(VersionUtils.upgradeVersion(VersionUtils.maxVersion(version)));
+
+    }
 
 
 

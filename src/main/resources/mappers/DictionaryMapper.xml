@@ -23,13 +23,6 @@
         delete from xdc_t_dictionary
         where id = #{id,jdbcType=BIGINT}
     </delete>
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id"
-            parameterType="com.xdcplus.interaction.common.pojo.entity.Dictionary">
-        insert into xdc_t_dictionary (id, dictionary_chinese, dictionary_class,
-          meaning, numerical)
-        values (#{id,jdbcType=BIGINT}, #{dictionaryChinese,jdbcType=VARCHAR}, #{dictionaryClass,jdbcType=VARCHAR},
-          #{meaning,jdbcType=VARCHAR}, #{numerical,jdbcType=INTEGER})
-    </insert>
     <insert id="insertBatch" useGeneratedKeys="true" parameterType="java.util.List">
         <selectKey resultType="long" keyProperty="id" order="AFTER">
             SELECT

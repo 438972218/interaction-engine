@@ -1,25 +1,27 @@
 package com.xdcplus.interaction.factory.flow;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.date.DateUtil;
-import cn.hutool.core.lang.Assert;
 import cn.hutool.core.lang.Validator;
 import cn.hutool.core.util.*;
+import cn.hutool.extra.spring.SpringUtil;
+import com.alibaba.fastjson.JSONObject;
 import com.xdcplus.interaction.common.enums.ResponseEnum;
 import com.xdcplus.interaction.common.exception.InteractionEngineException;
 import com.xdcplus.tool.constants.NumberConstant;
 import com.xdcplus.interaction.common.pojo.vo.*;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
+import java.io.Serializable;
+import java.lang.annotation.*;
 import java.lang.reflect.Field;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -31,8 +33,6 @@ import java.util.stream.Collectors;
 @Component
 public class AgreeProcessTransfor extends BaseProcessTransfor {
 
-    private static final String REGEX = ".*[a-zA-Z]+.*";
-
     @Override
     public Boolean supportType(Integer flowOption) {
         return Validator.equal(NumberConstant.ONE, flowOption);
@@ -43,248 +43,465 @@ public class AgreeProcessTransfor extends BaseProcessTransfor {
 
         log.info("Processing consent operation");
 
-        Long toUserId = processTransforParam.getToUserId();
-        Long userId = processTransforParam.getUserId();
-        List<Long> roleIds = processTransforParam.getAgree().getRoleIds();
-        RequestVO requestVO = processTransforParam.getRequest();
+        AgreeRequest agreeRequest = new AgreeRequest();
+        BeanUtil.copyProperties(processTransforParam, agreeRequest);
 
-        // 流程当前配置，如果是加签则是空
-        List<ProcessConfigVO> currentConfigList = super.findConfigByProcessIdAndFromStatusId(requestVO.getProcess().getId(),
-                requestVO.getStatus().getId(), requestVO.getConfigVersion(), userId, requestVO.getCreatedUser());
+        AgreeHandlerFactory.handler(agreeRequest);
+    }
 
-        // 判断是否是加签
-        Boolean extraNode = CollectionUtil.isEmpty(currentConfigList) ? Boolean.TRUE : Boolean.FALSE;
+    /**
+     * 处理器的优先级注解
+     *
+     * @author Rong.Jia
+     * @date 2021/07/15
+     */
+    @Inherited
+    @Documented
+    @Target(value = ElementType.TYPE)
+    @Retention(value = RetentionPolicy.RUNTIME)
+    private @interface AgreeHandlerAnnotation {
 
-        //  筛选操作流程节点
-        RequestFlowVO requestFlowVO = super.getCurrentRequestFlow(requestVO.getId(),
-                requestVO.getStatus().getId(), userId, roleIds);
+        /**
+         * 顺序
+         *
+         * @return int
+         */
+        int offset() default 0;
 
-        if (!super.isSignatureWait()) {
-            List<RequestFlowVO> requestFlowVOList = super.getBeforeCountersign(requestVO.getId(), requestVO.getStatus().getId());
-            if (CollectionUtil.isNotEmpty(requestFlowVOList)) {
-                syncIsSigned(requestVO, processTransforParam.getFlowOption(), processTransforParam.getDescription());
-                return;
+    }
+
+    /**
+     * 同意处理工厂类
+     *
+     * @author Rong.Jia
+     * @date 2021/07/15
+     */
+    private static class AgreeHandlerFactory {
+
+        /**
+         * 责任链中的处理器优先级排序集合
+         */
+        private static List<Integer> offsets = new ArrayList<>();
+
+        /**
+         * 责任链的处理类集合
+         */
+        private static final Map<Integer, BaseAgreeProcessHandler> handlerList = new LinkedHashMap<>();
+
+
+        /**
+         * 处理器执行类（总是从链首开始执行）
+         * @param request 同意参数
+         */
+        private static void handler(AgreeRequest request) {
+
+            if (CollectionUtil.isEmpty(offsets)) {
+                Map<String, BaseAgreeProcessHandler> agreeProcessHandlerMap = SpringUtil.getBeansOfType(BaseAgreeProcessHandler.class);
+                if (CollectionUtil.isNotEmpty(agreeProcessHandlerMap)) {
+                    ArrayList<BaseAgreeProcessHandler> agreeProcessHandlerList = CollectionUtil.newArrayList(agreeProcessHandlerMap.values());
+
+                    // 获取处理器优先级集合
+                    offsets = agreeProcessHandlerList.stream().map(t -> t.getClass()
+                            .getAnnotation(AgreeHandlerAnnotation.class).offset()).sorted()
+                            .collect(Collectors.toList());
+
+                    // 通过反射机制来生成处理器实例
+                    agreeProcessHandlerList.forEach(handler -> {
+                        AgreeHandlerAnnotation annotation = handler.getClass().getAnnotation(AgreeHandlerAnnotation.class);
+                        handlerList.put(annotation.offset(), handler);
+                    });
+
+                    // 指定处理器的下一个处理器实例
+                    handlerList.forEach( (k, v) -> {
+                        int size = offsets.size() - 1;
+                        int index = offsets.indexOf(k);
+                        if (size > index) {
+                            v.setNextHandler(handlerList.get(offsets.get(index + 1)));
+                        }
+                    });
+                }
             }
+
+            handlerList.get(offsets.get(NumberConstant.ZERO)).handler(request);
+        }
+    }
+
+    /**
+     * 同意过程处理程序
+     *
+     * @author Rong.Jia
+     * @date 2021/07/15
+     */
+    private static abstract class BaseAgreeProcessHandler {
+
+        /**
+         * 设置下一个处理程序
+         *
+         * @param handler 处理程序
+         */
+        public abstract void setNextHandler(BaseAgreeProcessHandler handler);
+
+        /**
+         * 处理程序
+         *
+         * @param request 请求
+         */
+        public abstract void handler(AgreeRequest request);
+
+    }
+
+    /**
+     * 同意操作-请求
+     *
+     * @author Rong.Jia
+     * @date 2021/07/15
+     */
+    @Data
+    private static class AgreeRequest implements Serializable {
+
+        private static final long serialVersionUID = 8510762105826701104L;
+
+        /**
+         * 表单
+         */
+        private RequestVO request;
+
+        /**
+         *  流程操作 ，详见流程操作信息
+         */
+        private Integer flowOption;
+
+        /**
+         * 用户ID
+         */
+        private Long userId;
+
+        /**
+         * 描述
+         */
+        private String description;
+
+        /**
+         *  同意操作
+         */
+        private ProcessTransforParam.Agree agree;
+
+        /**
+         * 当前自己流程是否是加签
+         *  当前流程配置=null：为true, 当前流程配置 !=null：为false,
+         */
+        private Boolean extraNode;
+
+        /**
+         * 当前操作流转节点
+         */
+        private RequestFlowVO currentFlow;
+
+        /**
+         * 当前流转去向流程配置
+         */
+        private List<ProcessConfigVO> currentConfigList;
+
+        /**
+         *  下一个流转节点信息
+         */
+        private List<ProcessConfigVO> nextConfigList;
+
+        public Boolean getExtraNode() {
+            return CollectionUtil.isEmpty(currentConfigList);
+        }
+    }
+
+    /**
+     * 获取去向流程处理器
+     *
+     * @author Rong.Jia
+     * @date 2021/07/15
+     */
+    @Component
+    @AgreeHandlerAnnotation(offset = 1)
+    private class GetDestinationProcessHandler extends BaseAgreeProcessHandler {
+
+        /**
+         * 处理程序
+         */
+        private BaseAgreeProcessHandler handler;
+
+        @Override
+        public void setNextHandler(BaseAgreeProcessHandler handler) {
+            this.handler = handler;
         }
 
-        // 未加签，自己流程不是加签
-        if (!extraNode) {
+        @Override
+        public void handler(AgreeRequest request) {
+
+            RequestVO requestVO = request.getRequest();
+            Long userId = request.getUserId();
+            List<Long> roleIds = request.getAgree().getRoleIds();
+
+            //  当前操作流转节点
+            RequestFlowVO currentFlow = getCurrentRequestFlow(requestVO.getId(),
+                    requestVO.getStatus().getId(), userId, roleIds);
+
+            // 当前流转去向流程配置
+            List<ProcessConfigVO> currentConfigList = findConfigByProcessIdAndFromStatusId(requestVO.getProcess().getId(),
+                    currentFlow.getToStatus().getId(), requestVO.getConfigVersion(), userId, requestVO.getCreatedUser());
+
+            request.setCurrentConfigList(currentConfigList);
+            request.setCurrentFlow(currentFlow);
+
+            doHandler(handler, request);
+        }
+    }
+
+    /**
+     * 完结自己处理程序
+     *
+     * @author Rong.Jia
+     * @date 2021/07/15
+     */
+    @Component
+    @AgreeHandlerAnnotation(offset = 2)
+    private class HisEndHandler extends BaseAgreeProcessHandler {
+
+        /**
+         * 处理程序
+         */
+        private BaseAgreeProcessHandler handler;
+
+        @Override
+        public void setNextHandler(BaseAgreeProcessHandler handler) {
+            this.handler = handler;
+        }
+
+        @Override
+        public void handler(AgreeRequest request) {
 
             // 修改当前节点信息
             SyncFlow syncFlow = SyncFlow.builder()
-                    .requestId(requestVO.getId())
-                    .flowId(requestFlowVO.getId())
-                    .flowOptionValue(processTransforParam.getFlowOption())
-                    .description(processTransforParam.getDescription())
+                    .requestId(request.getRequest().getId())
+                    .flowId(request.getCurrentFlow().getId())
+                    .flowOptionValue(request.getFlowOption())
+                    .description(request.getDescription())
                     .endTime(DateUtil.current())
-                    .toUserId(userId)
+                    .toUserId(request.getUserId())
                     .build();
 
             syncFlow(syncFlow);
 
-            // 去向流程的流程配置
-            List<ProcessConfigVO> processConfigVOList = getProcessConfigs(currentConfigList, requestFlowVO);
+            doHandler(handler, request);
 
-            // 如果大于1，则是会签
-            if (processConfigVOList.size() > NumberConstant.ONE) {
-                // 添加去向流程的逻辑在下面
+        }
+    }
+
+    /**
+     * 过滤去向流程处理器
+     *
+     * @author Rong.Jia
+     * @date 2021/07/15
+     */
+    @Component
+    @AgreeHandlerAnnotation(offset = 3)
+    private class FilterDirectionFlowHandler extends BaseAgreeProcessHandler {
+
+        /**
+         * 处理程序
+         */
+        private BaseAgreeProcessHandler handler;
+
+        @Override
+        public void setNextHandler(BaseAgreeProcessHandler handler) {
+            this.handler = handler;
+        }
+
+        @Override
+        public void handler(AgreeRequest request) {
+
+            Boolean extraNode = request.getExtraNode();
+            List<ProcessConfigVO> currentConfigList = request.getCurrentConfigList();
+
+            // 下一个配置信息集合
+            List<ProcessConfigVO> nextConfigList = CollectionUtil.newArrayList();
+
+            if (!extraNode) {
+
+                // 当前同级去向配置toStatus是否相同
+                boolean toStatusEq = Validator.equal(currentConfigList.stream()
+                        .map(a -> a.getToStatus().getMark())
+                        .collect(Collectors.toSet()).size(), NumberConstant.ONE);
+
+                // 同级去向配置Qualifier是否为空
+                boolean isQualifierNull = currentConfigList.stream().allMatch(a -> ObjectUtil.isNull(a.getQualifier()));
+
+                // 去向是否等于2
+                boolean toConfigureEq = Validator.equal(currentConfigList.size(), NumberConstant.TWO);
+
+                if ((!toStatusEq || !isQualifierNull) && toConfigureEq) {
+
+                    ProcessConfigVO currentProcessConfig = getCurrentProcessConfig(currentConfigList);
+
+                    if (!doExpression(currentProcessConfig.getQualifier(),
+                            request.getAgree().getFlowConditions())) {
+
+                        //获取失败去向配置
+                        currentProcessConfig = getFailureToProcessConfig(currentConfigList, currentProcessConfig);
+                    }
+
+                    nextConfigList.add(currentProcessConfig);
+                }else {
+                    nextConfigList.addAll(currentConfigList);
+                }
             }else {
 
-                ProcessConfigVO processConfigVO = getProcessConfig(processConfigVOList);
+                // 历史流转记录
+                List<RequestFlowVO> historicalCirculationList = requestFlowService.findRequestFlowRequestId(request.getRequest().getId());
 
-                // 验证条件
-                Boolean doExpression = doExpression(processConfigVO.getQualifier(), processTransforParam.getAgree().getFlowConditions());
+                RequestFlowVO currentFlow = request.getCurrentFlow();
 
-                if (doExpression) {
+                // 是前加签
+                if (ObjectUtil.equal(NumberConstant.SIX, currentFlow.getToStatus().getMark())) {
 
-                    // 如果是非被加签人操作， 需要获取是否有加签
-                    syncIsSigned(requestVO, NumberConstant.FOUR, null);
+                    RequestFlowVO recentUnsignedFlow = getRecentUnsignedFlow(historicalCirculationList,
+                            currentFlow.getId(), NumberConstant.SIX);
+
+                    ProcessConfigVO processConfigVO = new ProcessConfigVO();
+                    processConfigVO.setFromStatus(currentFlow.getToStatus());
+                    processConfigVO.setToRoleId(recentUnsignedFlow.getToRoleId());
+                    processConfigVO.setToUserId(recentUnsignedFlow.getToUserId());
+                    processConfigVO.setVersion(request.getRequest().getConfigVersion());
+                    processConfigVO.setToStatus(recentUnsignedFlow.getToStatus());
+                    processConfigVO.setProcess(recentUnsignedFlow.getProcess());
+
+                    nextConfigList.add(processConfigVO);
 
                 }else {
 
-                    // 默认流程
-                    ProcessConfigVO defaultProcessConfigVO = getDefaultProcessConfig(currentConfigList, requestFlowVO);
+                    // 后加签
 
-                    syncFlow = SyncFlow.builder()
-                            .requestId(requestVO.getId())
-                            .flowOptionValue(NumberConstant.A_NEGATIVE)
-                            .fromStatusId(defaultProcessConfigVO.getFromStatus().getId())
-                            .toStatusId(defaultProcessConfigVO.getToStatus().getId())
-                            .toRoleId(defaultProcessConfigVO.getToRoleId())
-                            .configVersion(requestVO.getConfigVersion())
-                            .toUserId(defaultProcessConfigVO.getToUserId())
-                            .fromUserId(userId)
-                            .build();
+                    RequestFlowVO recentUnsignedFlow = getRecentUnsignedFlow(historicalCirculationList,
+                            currentFlow.getId(), NumberConstant.FIVE);
 
-                    syncFlow(syncFlow);
-                    return;
+                    nextConfigList = findConfigByProcessIdAndFromStatusId(currentFlow.getProcess().getId(),
+                            recentUnsignedFlow.getToStatus().getId(), recentUnsignedFlow.getConfigVersion(),
+                            request.getUserId(), request.getCurrentFlow().getCreatedUser());
+
+                    if (CollectionUtil.isNotEmpty(nextConfigList)) {
+                        nextConfigList.forEach(a -> a.setFromStatus(currentFlow.getToStatus()));
+                    }
+
                 }
             }
-        }else {
 
-            // 是加签，自己流程是加签
+            request.setNextConfigList(nextConfigList);
 
-            SyncFlow syncFlow = SyncFlow.builder()
-                    .requestId(requestVO.getId())
-                    .flowId(requestFlowVO.getId())
-                    .flowOptionValue(processTransforParam.getFlowOption())
-                    .endTime(DateUtil.current())
-                    .description(processTransforParam.getDescription())
-                    .toUserId(userId)
-                    .build();
-
-            syncFlow(syncFlow);
-
+            doHandler(handler, request);
         }
-
-        // 判断当前流程是否完成流转
-        if (!requestFlowService.existRequestFlowByFlowOptionAndRequestId(NumberConstant.A_NEGATIVE, requestVO.getId())) {
-
-            // 当前流程的流转过程全部完成，
-
-            // 如果是加签，需要获取当前节点前的未加签的节点
-            List<RequestFlowVO> requestFlowVOList = requestFlowService.findRequestFlowRequestId(requestVO.getId());
-
-            // 当前节点的上一个状态ID
-            Long currentFromStatusId = requestFlowVO.getFromStatus().getId();
-
-            // 判断当前流程是否是加签过程中
-            if (ObjectUtil.equal(NumberConstant.SIX, requestFlowVO.getToStatus().getMark())) {
-
-                RequestFlowVO lastRequestFlowVO = getLastStatusRequestFlow(requestFlowVOList, requestFlowVO.getFromUserId(),
-                        currentFromStatusId, requestFlowVO.getId(), NumberConstant.SIX);
-
-                SyncFlow syncFlow = SyncFlow.builder()
-                        .requestId(requestVO.getId())
-                        .flowOptionValue(NumberConstant.A_NEGATIVE)
-                        .fromStatusId(requestVO.getStatus().getId())
-                        .toStatusId(lastRequestFlowVO.getToStatus().getId())
-                        .toRoleId(lastRequestFlowVO.getToRoleId())
-                        .toUserId(lastRequestFlowVO.getToUserId())
-                        .configVersion(requestVO.getConfigVersion())
-                        .fromUserId(userId)
-                        .build();
-
-                syncFlow(syncFlow);
-
-                super.updateRequestStatusIdById(requestVO.getId(), lastRequestFlowVO.getToStatus().getId());
-
-            }else {
-
-                List<ProcessConfigVO> processConfigVOList = super.findConfigByProcessIdAndFromStatusId(requestFlowVO.getProcess().getId(),
-                        requestFlowVO.getToStatus().getId(), requestFlowVO.getConfigVersion(), userId, requestVO.getCreatedUser());
-
-                if (ObjectUtil.equal(NumberConstant.FIVE, requestFlowVO.getToStatus().getMark())) {
-                    RequestFlowVO lastRequestFlowVO = getLastStatusRequestFlow(requestFlowVOList, requestFlowVO.getFromUserId(),
-                            currentFromStatusId, requestFlowVO.getId(), NumberConstant.FIVE);
-                    processConfigVOList = super.findConfigByProcessIdAndFromStatusId(requestFlowVO.getProcess().getId(),
-                            lastRequestFlowVO.getToStatus().getId(), lastRequestFlowVO.getConfigVersion(), userId, requestVO.getCreatedUser());
-                }
-
-                saveProcessFlow(processConfigVOList, requestVO, requestFlowVO, userId);
-            }
-        }
-
     }
 
     /**
-     * 添加流转
      *
-     * @param processConfigVOList 过程配置volist
+     *新增去向流程处理器
+     * @author Rong.Jia
+     * @date 2021/07/15
      */
-    private void saveProcessFlow(List<ProcessConfigVO> processConfigVOList, RequestVO requestVO,
-                                 RequestFlowVO requestFlowVO, Long userId) {
+    @Component
+    @AgreeHandlerAnnotation(offset = 4)
+    private class NewDestinationProcessHandler extends BaseAgreeProcessHandler {
 
-        for (ProcessConfigVO nextProcessConfigVO : processConfigVOList) {
+        /**
+         * 处理程序
+         */
+        private BaseAgreeProcessHandler handler;
 
-            Integer flowOptionValue = NumberConstant.A_NEGATIVE;
-            Long endTime  = null;
-
-            if (ObjectUtil.equal(NumberConstant.TWO, nextProcessConfigVO.getToStatus().getMark())
-                    || ObjectUtil.equal(NumberConstant.FOUR, nextProcessConfigVO.getToStatus().getMark()) ) {
-                flowOptionValue = NumberConstant.ONE;
-                endTime = DateUtil.current();
-            }
-
-            SyncFlow syncFlow = SyncFlow.builder()
-                    .requestId(requestVO.getId())
-                    .flowOptionValue(flowOptionValue)
-                    .fromStatusId(ObjectUtil.equal(NumberConstant.FIVE, requestFlowVO.getToStatus().getMark())
-                            ? requestFlowVO.getToStatus().getId()
-                            : nextProcessConfigVO.getFromStatus().getId())
-                    .toStatusId(nextProcessConfigVO.getToStatus().getId())
-                    .toRoleId(nextProcessConfigVO.getToRoleId())
-                    .configVersion(requestVO.getConfigVersion())
-                    .toUserId(nextProcessConfigVO.getToUserId())
-                    .fromUserId(userId)
-                    .endTime(endTime)
-                    .build();
-
-            syncFlow(syncFlow);
-
-            super.updateRequestStatusIdById(requestVO.getId(), nextProcessConfigVO.getToStatus().getId());
-
+        @Override
+        public void setNextHandler(BaseAgreeProcessHandler handler) {
+            this.handler = handler;
         }
 
-    }
+        @Override
+        public void handler(AgreeRequest request) {
 
+            if (!requestFlowService.existRequestFlowByFlowOptionAndRequestId(NumberConstant.A_NEGATIVE,
+                    request.getRequest().getId())) {
 
-    /**
-     * 同步被加签操作
-     * @param requestVO 请求VO
-     */
-    private void syncIsSigned(RequestVO requestVO, Integer flowOptionValue, @Nullable  String description) {
+                List<ProcessConfigVO> nextConfigList = request.getNextConfigList();
+                if (CollectionUtil.isNotEmpty(nextConfigList)) {
+                    for (ProcessConfigVO nextConfig : nextConfigList) {
 
-        if (!super.isSignatureWait()) {
-            List<RequestFlowVO> requestFlowVOList = super.getBeforeCountersign(requestVO.getId(), requestVO.getStatus().getId());
-            if (CollectionUtil.isNotEmpty(requestFlowVOList)) {
-                for (RequestFlowVO requestFlowVO : requestFlowVOList) {
+                        Integer flowOptionValue = NumberConstant.A_NEGATIVE;
+                        Long endTime  = null;
 
-                    // 修改被加签节点信息
-                    SyncFlow syncFlow = SyncFlow.builder()
-                            .requestId(requestVO.getId())
-                            .flowId(requestFlowVO.getId())
-                            .endTime(DateUtil.current())
-                            .description(description)
-                            .flowOptionValue(flowOptionValue)
-                            .build();
+                        if (ObjectUtil.equal(NumberConstant.TWO, nextConfig.getToStatus().getMark())
+                                || ObjectUtil.equal(NumberConstant.FOUR, nextConfig.getToStatus().getMark()) ) {
+                            flowOptionValue = NumberConstant.ONE;
+                            endTime = DateUtil.current();
+                        }
 
-                    syncFlow(syncFlow);
+                        SyncFlow syncFlow = SyncFlow.builder()
+                                .requestId(request.getRequest().getId())
+                                .flowOptionValue(flowOptionValue)
+                                .fromStatusId(nextConfig.getFromStatus().getId())
+                                .toStatusId(nextConfig.getToStatus().getId())
+                                .toRoleId(nextConfig.getToRoleId())
+                                .configVersion(nextConfig.getVersion())
+                                .toUserId(nextConfig.getToUserId())
+                                .fromUserId(request.getUserId())
+                                .configVersion(nextConfig.getVersion())
+                                .endTime(endTime)
+                                .build();
 
+                        syncFlow(syncFlow);
+
+                        updateRequestStatusIdById(request.getRequest().getId(), nextConfig.getToStatus().getId());
+
+                    }
                 }
             }
 
+            doHandler(handler, request);
         }
     }
 
     /**
-     * 过滤流程配置
-     * @param currentConfigList 流程配置集合
-     * @param requestFlowVO 流转信息
-     * @return {@link List<ProcessConfigVO>} 流程配置
+     * 执行处理程序
+     *
+     * @param handler 处理程序
+     * @param request 处理参数
      */
-    private List<ProcessConfigVO> getProcessConfigs(List<ProcessConfigVO> currentConfigList,
-                                             RequestFlowVO requestFlowVO) {
+    private void doHandler(BaseAgreeProcessHandler handler, AgreeRequest request) {
+        if (ObjectUtil.isNotNull(handler)) {
+            handler.handler(request);
+        }
+    }
 
-        List<ProcessConfigVO> processConfigVOList  = currentConfigList.stream()
-                .filter(a -> ObjectUtil.equal(a.getProcess().getId(), requestFlowVO.getProcess().getId())
-                        && ObjectUtil.equal(a.getFromStatus().getId(), requestFlowVO.getToStatus().getId()))
-                .collect(Collectors.toList());
+    /**
+     * 获取失败去向配置
+     * @param currentConfigList 流程配置集合
+     * @param normalToConfig 正常去向配置
+     * @return {@link ProcessConfigVO} 流程配置
+     */
+    private ProcessConfigVO getFailureToProcessConfig(List<ProcessConfigVO> currentConfigList,
+                                                    ProcessConfigVO normalToConfig) {
 
-        if (CollectionUtil.isEmpty(processConfigVOList)) {
+        ProcessConfigVO processConfigVO = currentConfigList.stream()
+                .filter(a -> ObjectUtil.equal(a.getProcess().getId(), normalToConfig.getProcess().getId())
+                        && ObjectUtil.notEqual(a.getId(), normalToConfig.getId()))
+                .findAny().orElse(null);
+
+        if (ObjectUtil.isNull(processConfigVO)) {
             log.error("Flow abnormal, The process configuration is not valid");
             throw new InteractionEngineException(ResponseEnum.THE_PROCESS_CONFIGURATION_INFORMATION_IS_NOT_VALID);
         }
 
-        return processConfigVOList;
+        return processConfigVO;
     }
 
     /**
-     * 过滤流程配置
+     * 获取当前去向配流程置
      * @param currentConfigList 流程配置集合
      * @return {@link ProcessConfigVO} 流程配置
      */
-    private ProcessConfigVO getProcessConfig(List<ProcessConfigVO> currentConfigList) {
+    private ProcessConfigVO getCurrentProcessConfig(List<ProcessConfigVO> currentConfigList) {
 
         ProcessConfigVO processConfigVO = currentConfigList.stream()
                 .filter(a -> ObjectUtil.isNotNull(a.getQualifier())).findAny().orElse(null);
@@ -300,56 +517,6 @@ public class AgreeProcessTransfor extends BaseProcessTransfor {
         }
 
         return processConfigVO;
-    }
-
-    /**
-     * 获取默认流程
-     * @param currentConfigList 流程配置集合
-     * @param requestFlowVO 流转信息
-     * @return {@link ProcessConfigVO} 流程配置
-     */
-    private ProcessConfigVO getDefaultProcessConfig(List<ProcessConfigVO> currentConfigList,
-                                             RequestFlowVO requestFlowVO) {
-
-        ProcessConfigVO processConfigVO = currentConfigList.stream()
-                .filter(a -> ObjectUtil.equal(a.getProcess().getId(), requestFlowVO.getProcess().getId())
-                        && ObjectUtil.equal(a.getFromStatus().getId(), requestFlowVO.getToStatus().getId())
-                        && ObjectUtil.isNull(a.getQualifier()))
-                .findAny().orElse(null);
-
-        if (ObjectUtil.isNull(processConfigVO)) {
-            log.error("Flow abnormal, The process configuration is not valid");
-            throw new InteractionEngineException(ResponseEnum.THE_PROCESS_CONFIGURATION_INFORMATION_IS_NOT_VALID);
-        }
-
-        return processConfigVO;
-    }
-
-    /**
-     * 获取流转条件参数信息
-     * @param flowCondition 流转条件参数信息
-     * @return {@link Map<String, String>}  key: 字段名， value: 值
-     */
-    private Map<String, String> getFlowConditions(Object flowCondition) {
-
-        if (ObjectUtil.isNotNull(flowCondition)) {
-            Field[] fields = ReflectUtil.getFields(flowCondition.getClass());
-            if (ArrayUtil.isNotEmpty(fields)) {
-                Map<String, String> flowConditions = CollectionUtil.newHashMap();
-                for (Field field : fields) {
-                    String fieldName = field.getName();
-                    try {
-                        flowConditions.put(fieldName, Convert.toStr(ReflectUtil.getFieldValue(flowCondition, field)));
-                    }catch (Exception e) {
-                        log.error("getFlowConditions {}, {}",
-                                String.format("field name  %s Value extraction anomaly", fieldName), e.getMessage());
-                    }
-                }
-                return flowConditions;
-            }
-        }
-
-        return null;
     }
 
     /**
@@ -373,7 +540,7 @@ public class AgreeProcessTransfor extends BaseProcessTransfor {
 
             ExpressionParser parser = new SpelExpressionParser();
             try {
-               return parser.parseExpression(script).getValue(boolean.class);
+                return parser.parseExpression(script).getValue(boolean.class);
             }catch (Exception e) {
                 log.error("Expression failed to run {}", e.getMessage());
             }
@@ -383,19 +550,47 @@ public class AgreeProcessTransfor extends BaseProcessTransfor {
         return Boolean.TRUE;
     }
 
+    /**
+     * 获取流转条件参数信息
+     * @param flowCondition 流转条件参数信息
+     * @return {@link Map<String, String>}  key: 字段名， value: 值
+     */
+    private Map<String, String> getFlowConditions(Object flowCondition) {
 
+        if (ObjectUtil.isNotNull(flowCondition)) {
+            if (flowCondition instanceof JSONObject) {
+                JSONObject jsonObject = (JSONObject) flowCondition;
+                Map<String, Object> innerMap = jsonObject.getInnerMap();
+                if (CollectionUtil.isNotEmpty(innerMap)) {
+                    return innerMap.entrySet().stream()
+                            .collect(Collectors.toMap(Map.Entry::getKey, a -> Convert.toStr(a.getValue())));
+                }
+            }else {
+                Field[] fields = ReflectUtil.getFields(flowCondition.getClass());
+                if (ArrayUtil.isNotEmpty(fields)) {
+                    Map<String, String> flowConditions = CollectionUtil.newHashMap();
+                    for (Field field : fields) {
+                        field.setAccessible(Boolean.TRUE);
+                        String fieldName = field.getName();
+                        try {
 
+                            Object fieldValue = ReflectUtil.getFieldValue(flowCondition, field);
+                            if (ObjectUtil.isNotNull(fieldValue)) {
+                                flowConditions.put(fieldName, Convert.toStr(fieldValue));
+                            }
+                        }catch (Exception e) {
+                            log.error("getFlowConditions {}, {}",
+                                    String.format("field name  %s Value extraction anomaly", fieldName), e.getMessage());
+                        }
+                        field.setAccessible(Boolean.FALSE);
+                    }
+                    return flowConditions;
+                }
+            }
+        }
 
-
-
-
-
-
-
-
-
-
-
+        return null;
+    }
 
 
 

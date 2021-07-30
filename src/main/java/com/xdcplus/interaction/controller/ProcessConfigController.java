@@ -2,10 +2,14 @@ package com.xdcplus.interaction.controller;
 
 
 import com.xdcplus.interaction.common.pojo.dto.ProcessConfigFilterDTO;
+import com.xdcplus.interaction.common.pojo.dto.ProcessConfigInfoFilterDTO;
 import com.xdcplus.interaction.common.pojo.vo.ProcessConfigInfoVO;
 import com.xdcplus.interaction.common.pojo.dto.ProcessConfigDTO;
+import com.xdcplus.interaction.common.pojo.vo.ProcessConfigVO;
 import com.xdcplus.interaction.common.pojo.vo.ResponseVO;
 import com.xdcplus.interaction.service.ProcessConfigService;
+import com.xdcplus.tool.pojo.dto.PageDTO;
+import com.xdcplus.tool.pojo.vo.PageVO;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,20 +47,28 @@ public class ProcessConfigController {
         return ResponseVO.success();
     }
 
-    @ApiOperation("查询流程配置")
-    @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseVO<List<ProcessConfigInfoVO>> findProcessConfig(ProcessConfigFilterDTO processConfigFilterDTO) {
+    @ApiOperation("查询流程配置信息(配置模式)")
+    @GetMapping(value = "/chart", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseVO<List<ProcessConfigInfoVO>> findProcessConfig(ProcessConfigInfoFilterDTO processConfigInfoFilterDTO) {
 
-        log.info("findProcessConfig  {} ", processConfigFilterDTO.toString());
+        log.info("findProcessConfig  {} ", processConfigInfoFilterDTO.toString());
 
-        Validation.buildDefaultValidatorFactory().getValidator().validate(processConfigFilterDTO);
+        Validation.buildDefaultValidatorFactory().getValidator().validate(processConfigInfoFilterDTO);
 
-        return ResponseVO.success(processConfigService.findProcessConfig(processConfigFilterDTO.getProcessId(),
-                processConfigFilterDTO.getVersion()));
+        return ResponseVO.success(processConfigService.findProcessConfig(processConfigInfoFilterDTO.getProcessId(),
+                processConfigInfoFilterDTO.getVersion()));
 
     }
 
+    @ApiOperation("查询流程配置信息")
+    @GetMapping(value = "/filter", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseVO<PageVO<ProcessConfigVO>> findProcessConfigFilter(ProcessConfigFilterDTO processConfigFilterDTO) {
 
+        log.info("findProcessConfig {}", processConfigFilterDTO.toString());
+
+        return ResponseVO.success(processConfigService.findProcessConfig(processConfigFilterDTO));
+
+    }
 
 
 

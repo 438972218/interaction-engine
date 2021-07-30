@@ -1,11 +1,15 @@
 package com.xdcplus.interaction.service;
 
+import com.xdcplus.interaction.common.pojo.dto.ProcessConfigFilterDTO;
 import com.xdcplus.interaction.common.pojo.vo.ProcessConfigInfoVO;
+import com.xdcplus.interaction.common.pojo.vo.ProcessConfigNodeVO;
 import com.xdcplus.mp.service.BaseService;
 import com.xdcplus.interaction.common.pojo.bo.ProcessConfigBO;
 import com.xdcplus.interaction.common.pojo.dto.ProcessConfigDTO;
 import com.xdcplus.interaction.common.pojo.entity.ProcessConfig;
 import com.xdcplus.interaction.common.pojo.vo.ProcessConfigVO;
+import com.xdcplus.tool.pojo.dto.PageDTO;
+import com.xdcplus.tool.pojo.vo.PageVO;
 import org.springframework.lang.Nullable;
 
 import java.util.List;
@@ -70,9 +74,21 @@ public interface ProcessConfigService extends BaseService<ProcessConfigBO, Proce
      */
     List<ProcessConfigInfoVO> findProcessConfig(Long processId, @Nullable String version);
 
+    /**
+     * 根据流程ID获取历史配置版本号集合
+     *
+     * @param processId 流程ID
+     * @return {@link List<String>}  历史配置版本号集合
+     */
+    List<String> findConfigVersionByProcessId(Long processId);
 
-
-
+    /**
+     * 查询流程配置
+     *
+     * @param processConfigFilterDTO 查询条件
+     * @return {@link PageVO<ProcessConfigVO>} 流程配置
+     */
+    PageVO<ProcessConfigVO> findProcessConfig(ProcessConfigFilterDTO processConfigFilterDTO);
 
 
 

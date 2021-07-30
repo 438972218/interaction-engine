@@ -1,8 +1,8 @@
 package com.xdcplus.interaction.controller;
 
 
+import com.xdcplus.interaction.common.pojo.dto.HandleMattersFilterDTO;
 import com.xdcplus.interaction.common.pojo.vo.ResponseVO;
-import com.xdcplus.mp.controller.AbstractController;
 import com.xdcplus.tool.pojo.vo.PageVO;
 import com.xdcplus.interaction.common.pojo.dto.RequestConfigDTO;
 import com.xdcplus.interaction.common.pojo.dto.RequestDTO;
@@ -10,6 +10,8 @@ import com.xdcplus.interaction.common.pojo.dto.RequestFilterDTO;
 import com.xdcplus.interaction.common.pojo.vo.RequestVO;
 import com.xdcplus.interaction.service.RequestService;
 import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Validation;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 /**
  * 流程表单 前端控制器
@@ -30,12 +34,12 @@ import javax.validation.Validation;
 @Slf4j
 @RequestMapping("/request")
 @Api(tags = "流程表单模块管理")
-public class RequestController extends AbstractController {
+public class RequestController {
 
     @Autowired
     private RequestService requestService;
 
-    @ApiOperation("查询表单")
+    @ApiOperation("查询表单信息")
     @GetMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseVO<PageVO<RequestVO>> findRequest(RequestFilterDTO requestFilterDTO) {
 
@@ -49,11 +53,9 @@ public class RequestController extends AbstractController {
 
     @ApiOperation("新增表单")
     @PostMapping(value = "", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseVO saveRequest(@RequestBody RequestDTO requestDTO) {
+    public ResponseVO<RequestVO> saveRequest(@RequestBody RequestDTO requestDTO) {
 
-        log.info("saveReques {}", requestDTO.toString());
-
-        requestDTO.setCreatedUser(getAccount());
+        log.info("saveRequest {}", requestDTO.toString());
 
         return ResponseVO.success(requestService.saveRequest(requestDTO));
 
@@ -69,6 +71,53 @@ public class RequestController extends AbstractController {
 
         return ResponseVO.success();
     }
+
+    @GetMapping(value = "/{requestId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation("查询单个表单信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "path", name = "requestId", dataType = "Long", value = "表单ID", required = true),
+    })
+    public ResponseVO<RequestVO> findRequestById(@PathVariable("requestId")
+                                                             @NotNull(message = "表单ID不能为空")
+                                                             Long requestId) {
+
+        log.info("findRequestById {}", requestId);
+
+        return ResponseVO.success(requestService.findOne(requestId));
+    }
+
+    @ApiOperation("验证表单是否存在")
+    @GetMapping(value = "/existRequest/{title}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "path", name = "title", dataType = "String", value = "表单标题", required = true),
+    })
+    public ResponseVO<Boolean> validationExists(@PathVariable("title")
+                                                @NotBlank(message = "表单标题 不能为空")
+                                                        String title) {
+
+        log.info("validationExists {}", title);
+
+        return ResponseVO.success(requestService.validationExists(title));
+
+    }
+
+    @GetMapping(value = "/handleMatters", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation("表单处理事项")
+    public ResponseVO<PageVO<RequestVO>> handleMatters(HandleMattersFilterDTO handleMattersFilterDTO) {
+
+        log.info("handleMatters {}", handleMattersFilterDTO.toString());
+
+        Validation.buildDefaultValidatorFactory().getValidator().validate(handleMattersFilterDTO);
+
+        return ResponseVO.success(requestService.handleMatters(handleMattersFilterDTO));
+    }
+
+
+
+
+
+
+
 
 
 

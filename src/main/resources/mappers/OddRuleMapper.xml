@@ -25,26 +25,32 @@
         where id = #{id,jdbcType=BIGINT}
     </update><select id="findOddRuleByPrefix" resultMap="BaseResultMap">
         SELECT
-            rule.*
+            <include refid="Base_Column_List"/>
         FROM
-            xdc_t_odd_rule AS rule
+            xdc_t_odd_rule
         WHERE
-            rule.prefix = #{prefix,jdbcType=VARCHAR}
+            prefix = #{prefix,jdbcType=VARCHAR}
     </select>
     <select id="findOddRule" resultMap="BaseResultMap">
         select
-            rule.*
+            <include refid="Base_Column_List"/>
         FROM
-            xdc_t_odd_rule AS rule
+            xdc_t_odd_rule
         <where>
             <if test="name != null and name != ''">
-                rule.name = #{name,jdbcType=VARCHAR}
+                name = #{name,jdbcType=VARCHAR}
             </if>
             <if test="prefix != null and prefix != ''">
-                rule.prefix = #{prefix,jdbcType=VARCHAR}
+                prefix = #{prefix,jdbcType=VARCHAR}
             </if>
         </where>
 
+    </select>
+    <select id="findOddRuleByName" resultMap="BaseResultMap">
+        select
+            <include refid="Base_Column_List"/>
+        from xdc_t_odd_rule
+        where name = #{name,jdbcType=VARCHAR}
     </select>
 
 </mapper>

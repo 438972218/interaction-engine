@@ -2,6 +2,7 @@ package com.xdcplus.interaction.service;
 
 import com.alibaba.fastjson.JSON;
 import com.xdcplus.interaction.InteractionEngineApplicationTests;
+import com.xdcplus.interaction.common.pojo.dto.HandleMattersFilterDTO;
 import com.xdcplus.interaction.common.pojo.dto.RequestDTO;
 import com.xdcplus.interaction.common.pojo.dto.RequestFilterDTO;
 import com.xdcplus.interaction.common.pojo.vo.RequestVO;
@@ -25,7 +26,6 @@ class RequestServiceTest extends InteractionEngineApplicationTests {
         RequestDTO requestDTO = new RequestDTO();
         requestDTO.setProcessId(5000L);
         requestDTO.setRuleId(1406871163489734658L);
-        requestDTO.setConfigVersion("V1.0.0");
         requestDTO.setTitle("请假测试12313");
 
         RequestVO saveRequest = requestService.saveRequest(requestDTO);
@@ -44,4 +44,29 @@ class RequestServiceTest extends InteractionEngineApplicationTests {
         System.out.println(JSON.toJSONString(requestService.findRequest(requestFilterDTO)));
 
     }
+
+    @Test
+    void handleMatters() {
+
+        HandleMattersFilterDTO handleMattersFilterDTO = new HandleMattersFilterDTO();
+        handleMattersFilterDTO.setHandleOption(2);
+        handleMattersFilterDTO.setUserId(1L);
+        handleMattersFilterDTO.setCurrentPage(1);
+        handleMattersFilterDTO.setPageSize(20);
+
+        System.out.println(requestService.handleMatters(handleMattersFilterDTO));
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 }

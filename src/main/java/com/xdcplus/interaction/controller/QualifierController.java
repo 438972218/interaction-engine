@@ -1,7 +1,7 @@
 package com.xdcplus.interaction.controller;
 
+import com.xdcplus.interaction.common.pojo.vo.ProcessStatusVO;
 import com.xdcplus.interaction.common.pojo.vo.ResponseVO;
-import com.xdcplus.mp.controller.AbstractController;
 import com.xdcplus.tool.pojo.vo.PageVO;
 import com.xdcplus.interaction.common.pojo.dto.QualifierDTO;
 import com.xdcplus.interaction.common.pojo.dto.QualifierFilterDTO;
@@ -18,6 +18,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Validation;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -31,7 +32,7 @@ import javax.validation.constraints.NotNull;
 @Slf4j
 @Api(tags = "流程规则模块管理")
 @RequestMapping("/qualifier")
-public class QualifierController extends AbstractController {
+public class QualifierController {
 
     @Autowired
     private QualifierService qualifierService;
@@ -42,7 +43,6 @@ public class QualifierController extends AbstractController {
 
         log.info("saveQualifier {}", qualifierDTO.toString());
 
-        qualifierDTO.setCreatedUser(getAccount());
         qualifierService.saveQualifier(qualifierDTO);
 
         return ResponseVO.success();
@@ -55,7 +55,6 @@ public class QualifierController extends AbstractController {
 
         log.info("updateQualifier {}", qualifierDTO.toString());
 
-        qualifierDTO.setUpdatedUser(getAccount());
         qualifierService.updateQualifier(qualifierDTO);
 
         return ResponseVO.success();
@@ -89,6 +88,54 @@ public class QualifierController extends AbstractController {
         return ResponseVO.success(qualifierService.findQualifier(qualifierFilterDTO));
 
     }
+
+    @ApiOperation("查询单个流程规则")
+    @GetMapping(value = "/{qualifierId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "path", name = "qualifierId", dataType = "Long", value = "流程规则ID", required = true),
+    })
+    public ResponseVO<QualifierVO> findQualifierById(@PathVariable("qualifierId")
+                                                             @NotNull(message = "流程规则ID 不能为空")
+                                                                     Long qualifierId) {
+
+        log.info("findQualifierById {}", qualifierId);
+
+        return ResponseVO.success(qualifierService.findOne(qualifierId));
+
+    }
+
+    @ApiOperation("验证流程规则信息是否存在")
+    @GetMapping(value = "/existQualifier/{name}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiImplicitParams({
+            @ApiImplicitParam(paramType = "path", name = "name", dataType = "String", value = "流程规则信息名称", required = true),
+    })
+    public ResponseVO<Boolean> validationExists(@PathVariable("name")
+                                                @NotBlank(message = "流程规则信息名称 不能为空")
+                                                        String name) {
+
+        log.info("validationExists {}", name);
+
+        return ResponseVO.success(qualifierService.validationExists(name));
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 }

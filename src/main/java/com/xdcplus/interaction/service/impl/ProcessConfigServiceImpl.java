@@ -7,24 +7,27 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.github.pagehelper.PageInfo;
 import com.xdcplus.interaction.common.enums.ResponseEnum;
 import com.xdcplus.interaction.common.exception.InteractionEngineException;
+import com.xdcplus.interaction.common.pojo.entity.Process;
 import com.xdcplus.interaction.common.pojo.entity.ProcessConfigLine;
 import com.xdcplus.interaction.common.pojo.entity.ProcessConfigNode;
-import com.xdcplus.interaction.common.pojo.vo.ConfigInfoVO;
-import com.xdcplus.interaction.common.pojo.vo.ProcessConfigInfoVO;
-import com.xdcplus.interaction.common.pojo.vo.ProcessStatusVO;
+import com.xdcplus.interaction.common.pojo.query.ProcessConfigQuery;
+import com.xdcplus.interaction.common.pojo.vo.*;
 import com.xdcplus.interaction.common.utils.ProcessValidationUtils;
+import com.xdcplus.interaction.common.utils.VersionUtils;
 import com.xdcplus.mp.service.impl.BaseServiceImpl;
-import com.xdcplus.mp.utils.AuthUtils;
-import com.xdcplus.tool.constants.AuthConstant;
 import com.xdcplus.interaction.common.pojo.bo.ProcessConfigBO;
 import com.xdcplus.interaction.common.pojo.dto.*;
 import com.xdcplus.interaction.common.pojo.entity.ProcessConfig;
-import com.xdcplus.interaction.common.pojo.vo.ProcessConfigVO;
 import com.xdcplus.interaction.mapper.ProcessConfigMapper;
 import com.xdcplus.interaction.service.*;
 import com.xdcplus.tool.constants.NumberConstant;
+import com.xdcplus.tool.pojo.dto.PageDTO;
+import com.xdcplus.tool.pojo.vo.PageVO;
+import com.xdcplus.tool.utils.PageableUtils;
+import com.xdcplus.tool.utils.PropertyUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
@@ -62,6 +65,9 @@ public class ProcessConfigServiceImpl extends BaseServiceImpl<ProcessConfigBO, P
     @Autowired
     private ProcessConfigNodeService processConfigNodeService;
 
+    @Autowired
+    private RequestService requestService;
+
     @Override
     public Boolean existConfigByProcessId(Long processId) {
 
@@ -95,11 +101,12 @@ public class ProcessConfigServiceImpl extends BaseServiceImpl<ProcessConfigBO, P
     @Transactional(rollbackFor = RuntimeException.class)
     public Boolean saveProcessConfig(ProcessConfigDTO processConfigDTO) {
 
-        String version = processConfigDTO.getVersion();
         Long processId = processConfigDTO.getProcessId();
 
         Assert.notNull(processService.findOne(processId),
                 ResponseEnum.THE_PROCESS_DOES_NOT_EXIST_OR_HAS_BEEN_DELETED.getMessage());
+
+        String version = versionGetAndIncrement(processId);
 
         // 流程配置 线信息
         List<ProcessConfigLineDTO> configLines = processConfigDTO.getLines();
@@ -167,15 +174,80 @@ public class ProcessConfigServiceImpl extends BaseServiceImpl<ProcessConfigBO, P
     }
 
     @Override
+    public List<String> findConfigVersionByProcessId(Long processId) {
+
+        Assert.notNull(processId, ResponseEnum.THE_ID_CANNOT_BE_EMPTY.getMessage());
+
+        return processConfigMapper.findConfigVersionByProcessId(processId);
+    }
+
+    @Override
+    public PageVO<ProcessConfigVO> findProcessConfig(ProcessConfigFilterDTO processConfigFilterDTO) {
+
+        PageVO<ProcessConfigVO> pageVO = new PageVO<>();
+
+        if (processConfigFilterDTO.getCurrentPage() > NumberConstant.ZERO) {
+            PageableUtils.basicPage(processConfigFilterDTO);
+        }
+
+        ProcessConfigQuery query = new ProcessConfigQuery();
+        BeanUtil.copyProperties(processConfigFilterDTO, query);
+        query.setArchiveId(processStatusService.findProcessStatusByMark(Convert.toStr(NumberConstant.TWO)).getId());
+
+        List<ProcessConfigBO> processConfigBOList = processConfigMapper.findProcessConfig(query);
+
+        PageInfo<ProcessConfigBO> pageInfo = new PageInfo<>(processConfigBOList);
+        PropertyUtils.copyProperties(pageInfo, pageVO, this.objectConversion(processConfigBOList, Boolean.TRUE));
+
+        return pageVO;
+    }
+
+    @Override
     public ProcessConfigVO objectConversion(ProcessConfigBO processConfigBO) {
 
         ProcessConfigVO processConfigVO = super.objectConversion(processConfigBO);
-        processConfigVO.setFromStatus(processStatusService.objectConversion(processConfigBO.getFromStatus()));
-        processConfigVO.setToStatus(processStatusService.objectConversion(processConfigBO.getToStatus()));
-        processConfigVO.setProcess(processService.objectConversion(processConfigBO.getProcess()));
+        if (ObjectUtil.isNotNull(processConfigVO)) {
+            processConfigVO.setFromStatus(processStatusService.objectConversion(processConfigBO.getFromStatus()));
+            processConfigVO.setToStatus(processStatusService.objectConversion(processConfigBO.getToStatus()));
+            processConfigVO.setProcess(processService.objectConversion(processConfigBO.getProcess()));
 
-        if (ObjectUtil.isNotNull(processConfigBO.getQualifier())) {
-            processConfigVO.setQualifier(qualifierService.objectConversion(processConfigBO.getQualifier()));
+            if (ObjectUtil.isNotNull(processConfigBO.getQualifier())) {
+                processConfigVO.setQualifier(qualifierService.objectConversion(processConfigBO.getQualifier()));
+            }
+        }
+
+        return processConfigVO;
+    }
+
+    /**
+     * 对象转换
+     *
+     * @param processConfigBOList 流程配置BO
+     * @param isStatisticsForm     是否统计表单 true: 是，false: 否
+     * @return {@link List<ProcessConfigVO>} 流程配置BO
+     */
+    private List<ProcessConfigVO> objectConversion(List<ProcessConfigBO> processConfigBOList, Boolean isStatisticsForm) {
+        if (CollectionUtil.isNotEmpty(processConfigBOList)) {
+            return processConfigBOList.stream()
+                    .map(a -> this.objectConversion(a, isStatisticsForm))
+                    .collect(Collectors.toList());
+        }
+        return null;
+    }
+
+    /**
+     * 对象转换
+     *
+     * @param processConfigBO 流程配置BO
+     * @param isStatisticsForm  是否统计表单 true: 是，false: 否
+     * @return {@link ProcessConfigVO}
+     */
+    private ProcessConfigVO objectConversion(ProcessConfigBO processConfigBO, Boolean isStatisticsForm) {
+
+        ProcessConfigVO processConfigVO = this.objectConversion(processConfigBO);
+        if (ObjectUtil.isNotNull(processConfigVO) && isStatisticsForm) {
+            Optional.ofNullable(processConfigVO.getToStatus().getId())
+                    .ifPresent(a -> processConfigVO.setRequestNumber(requestService.countRequestByStatusId(a)));
         }
 
         return processConfigVO;
@@ -249,6 +321,7 @@ public class ProcessConfigServiceImpl extends BaseServiceImpl<ProcessConfigBO, P
                                     nodeVO.setToRoleId(c.getToRoleId());
                                     nodeVO.setToUserId(c.getToUserId());
                                     nodeVO.setTimeoutAction(c.getTimeoutAction());
+                                    nodeVO.setUserTo(c.getUserTo());
                                 });
 
                         return nodeVO;
@@ -316,6 +389,7 @@ public class ProcessConfigServiceImpl extends BaseServiceImpl<ProcessConfigBO, P
 
             ProcessConfig processConfig = new ProcessConfig();
             processConfig.setProcessId(processId);
+            processConfig.setUserTo(processConfigNodeDTO.getUserTo());
             processConfig.setFromStatusId(getProcessStatus(processConfigNodeDTO.getName(), line.getFrom()).getId());
             processConfig.setToStatusId(getProcessStatus(configNodeMap.get(line.getTo()).getName(), line.getTo()).getId());
             processConfig.setVersion(version);
@@ -324,12 +398,6 @@ public class ProcessConfigServiceImpl extends BaseServiceImpl<ProcessConfigBO, P
             processConfig.setToUserId(processConfigNodeDTO.getToUserId());
             if (isAddConditions(line.getLabel()) && ObjectUtil.isNotNull(processConfigNodeDTO.getCondition())) {
                 processConfig.setQualifierId(qualifierService.getQualifier(processConfigNodeDTO.getCondition()));
-            }
-
-            try {
-                processConfig.setCreatedUser(AuthUtils.getCurrentUser());
-            } catch (Exception e) {
-                processConfig.setCreatedUser(AuthConstant.ADMINISTRATOR);
             }
 
             processConfig.setCreatedTime(DateUtil.current());
@@ -392,6 +460,30 @@ public class ProcessConfigServiceImpl extends BaseServiceImpl<ProcessConfigBO, P
     private ProcessStatusVO getProcessStatus(String name, String mark) {
         return processStatusService.getProcessStatus(name, mark);
     }
+
+    /**
+     * 版本号获取并自增1返回
+     *
+     * @param processId 进程id
+     * @return {@link String}
+     */
+    private String versionGetAndIncrement (Long processId) {
+
+        List<String> versionList = this.findConfigVersionByProcessId(processId);
+        return VersionUtils.upgradeVersion(VersionUtils.maxVersion(versionList));
+    }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
